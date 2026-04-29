@@ -70,149 +70,235 @@ export default function DashboardHome() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700 pb-12">
+    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700 pb-16">
+
+      {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/10 pb-6 mt-8">
         <div>
-          <div className="inline-flex items-center gap-2 px-2 py-1 rounded bg-white/5 border border-white/10 text-white/70 text-[10px] uppercase tracking-wider mb-3">
-            <Zap className="w-3 h-3 text-primary" /> FORGE COMMAND CENTER
+          <div className="inline-flex items-center gap-2 px-2 py-1 rounded bg-primary/10 border border-primary/20 text-primary text-[10px] uppercase tracking-wider mb-3">
+            <Zap className="w-3 h-3" /> FORGE COMMAND CENTER
           </div>
-          <h1 className="text-4xl lg:text-5xl font-heading font-medium tracking-tight mb-2">Build faster.</h1>
-          <p className="text-muted-foreground text-lg">Turn raw instinct into execution.</p>
+          <h1 className="text-4xl lg:text-5xl font-heading font-medium tracking-tight mb-1">
+            {user?.user_metadata?.full_name
+              ? `Welcome back, ${user.user_metadata.full_name.split(' ')[0]}.`
+              : 'Command Center.'}
+          </h1>
+          <p className="text-muted-foreground text-lg">
+            {brands.length === 0
+              ? 'Your forge is empty. Start building your first brand.'
+              : `You have ${brands.length} brand${brands.length > 1 ? 's' : ''} in the forge.`}
+          </p>
         </div>
-        <div className="flex gap-4">
-           <div className="relative w-64 lg:w-80 hidden sm:block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Search projects or signals..." className="pl-9 bg-black/50 border-white/10" />
-           </div>
-           {planInfo && planInfo.brandsUsed >= planInfo.brandsLimit ? (
-             <div className="flex items-center gap-3">
-               <span className="text-xs text-white/40">
-                 {planInfo.brandsUsed}/{planInfo.brandsLimit} brands used
-               </span>
-               <Link
-                 to="/pricing"
-                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-orange-500/40 text-orange-400 text-xs font-bold uppercase tracking-widest hover:bg-orange-500/10 transition-all"
-               >
-                 Upgrade to add more →
-               </Link>
-             </div>
-           ) : (
-             <Link to="/new-brand">
-               <Button className="gap-2 bg-white text-black hover:bg-gray-200 uppercase tracking-widest text-xs font-bold h-10 px-6 custom-glow">
-                 <PlusCircle className="w-4 h-4" />
-                 New Brand
-               </Button>
-             </Link>
-           )}
+        <div className="flex gap-3 items-center">
+          {planInfo && planInfo.brandsUsed >= planInfo.brandsLimit ? (
+            <Link
+              to="/pricing"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-orange-500/40 text-orange-400 text-xs font-bold uppercase tracking-widest hover:bg-orange-500/10 transition-all"
+            >
+              Upgrade Plan →
+            </Link>
+          ) : (
+            <Link to="/new-brand">
+              <Button className="gap-2 bg-primary hover:bg-orange-600 text-white uppercase tracking-widest text-xs font-bold h-10 px-6">
+                <PlusCircle className="w-4 h-4" /> New Brand
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
 
-       {showWelcomeBanner && (
-         <div className="mb-6 flex items-center justify-between p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 animate-in slide-in-from-top duration-500">
-           <div className="flex items-center gap-3">
-             <span className="text-orange-400 text-lg">⚡</span>
-             <div>
-               <p className="text-sm font-bold text-white">Welcome back to FORGE</p>
-               <p className="text-xs text-white/40">Open any brand to continue building or run a new engine.</p>
-             </div>
-           </div>
-           <button
-             onClick={() => setShowWelcomeBanner(false)}
-             className="text-white/20 hover:text-white/60 transition-colors text-lg shrink-0 ml-4"
-           >
-             ×
-           </button>
-         </div>
-       )}
-
-       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {loading ? (
-          [1,2,3].map(i => (
-            <Card key={i} className="h-[280px] bg-white/5 border-white/10 animate-pulse rounded-xl" />
-          ))
-        ) : brands.length > 0 ? (
-          brands.map((brand) => (
-            <BrandCard
-              key={brand.id}
-              brand={brand}
-              onDelete={handleDelete}
-            />
-          ))
-        ) : (
-          <div className="col-span-full">
-            <EmptyState
-              isFirstTime={isFirstTime}
-              onCreateBrand={() => navigate('/new-brand')}
-            />
+      {/* UPGRADE TOAST */}
+      {showWelcomeBanner && (
+        <div className="flex items-center justify-between p-4 rounded-xl bg-primary/10 border border-primary/20 animate-in slide-in-from-top duration-500">
+          <div className="flex items-center gap-3">
+            <span className="text-primary text-lg">⚡</span>
+            <div>
+              <p className="text-sm font-bold text-white">Welcome back to FORGE</p>
+              <p className="text-xs text-white/40">Open any brand to continue building or forge a new one.</p>
+            </div>
           </div>
-        )}
+          <button onClick={() => setShowWelcomeBanner(false)} className="text-white/20 hover:text-white/60 text-lg ml-4">×</button>
+        </div>
+      )}
+
+      {/* STATS ROW */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          {
+            label: 'Brands Forged',
+            value: loading ? '—' : brands.length,
+            icon: <BrainCircuit className="w-5 h-5 text-primary" />,
+            sub: planInfo ? `${planInfo.brandsLimit === 999 ? '∞' : planInfo.brandsLimit} plan limit` : '',
+          },
+          {
+            label: 'Active Brands',
+            value: loading ? '—' : brands.filter(b => b.status === 'active').length,
+            icon: <Activity className="w-5 h-5 text-green-400" />,
+            sub: 'Currently building',
+          },
+          {
+            label: 'Plan',
+            value: loading ? '—' : planInfo?.label || 'Free',
+            icon: <Sparkles className="w-5 h-5 text-yellow-400" />,
+            sub: <Link to="/pricing" className="text-primary hover:underline">Upgrade →</Link>,
+          },
+          {
+            label: 'Avg Readiness',
+            value: loading ? '—' : brands.length > 0
+              ? `${Math.round(brands.reduce((a, b) => a + (b.launch_readiness || 0), 0) / brands.length)}%`
+              : '0%',
+            icon: <TrendingUp className="w-5 h-5 text-blue-400" />,
+            sub: 'Across all brands',
+          },
+        ].map((stat, i) => (
+          <Card key={i} className="p-5 bg-black border-white/10 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">{stat.label}</span>
+              {stat.icon}
+            </div>
+            <div className="text-3xl font-light text-white">{stat.value}</div>
+            <div className="text-xs text-muted-foreground">{stat.sub}</div>
+          </Card>
+        ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-12">
-        <div className="col-span-1 lg:col-span-2 space-y-6">
-           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-white/10 pb-4 gap-4">
-              <h2 className="text-xl font-heading font-medium flex items-center gap-2"><Activity className="w-5 h-5 text-primary"/> AI Activity Log</h2>
-              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-white border border-transparent hover:border-white/10"><RefreshCw className="w-3 h-3 mr-2" /> Sync Engines</Button>
-           </div>
-           
-           <Card className="bg-[#050505] border-white/5 p-6">
-              <div className="space-y-3">
-                {brands && brands.length > 0 ? (
-                  brands.slice(0, 3).map((brand) => (
-                    <div key={brand.id} className="flex items-center gap-3 p-3 rounded-lg bg-black/50 border border-white/5">
-                      <div className="text-[10px] text-muted-foreground font-mono uppercase">
-                        {new Date(brand.created_at).toLocaleDateString()}
+      {/* ENGINE QUICK LAUNCH */}
+      <div>
+        <h2 className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-4">Quick Launch</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {[
+            { label: 'Signal', desc: 'Market Intel', path: '/signal', color: 'text-blue-400 border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10' },
+            { label: 'Craft', desc: 'Brand Identity', path: '/craft', color: 'text-primary border-primary/20 bg-primary/5 hover:bg-primary/10' },
+            { label: 'Reach', desc: 'Growth & Ads', path: '/reach', color: 'text-green-400 border-green-500/20 bg-green-500/5 hover:bg-green-500/10' },
+            { label: 'Pulse', desc: 'Customer CX', path: '/pulse', color: 'text-rose-400 border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10' },
+            { label: 'Capital', desc: 'Finance', path: '/capital', color: 'text-yellow-400 border-yellow-500/20 bg-yellow-500/5 hover:bg-yellow-500/10' },
+          ].map((engine) => (
+            <Link key={engine.path} to={engine.path}>
+              <div className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 ${engine.color}`}>
+                <div className={`text-sm font-bold mb-1 ${engine.color.split(' ')[0]}`}>{engine.label}</div>
+                <div className="text-xs text-white/40">{engine.desc}</div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* BRAND CARDS */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-heading font-medium flex items-center gap-2">
+            <Palette className="w-5 h-5 text-primary" /> Your Brands
+          </h2>
+          {brands.length > 0 && (
+            <span className="text-xs text-muted-foreground">{brands.length} total</span>
+          )}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {loading ? (
+            [1, 2, 3].map(i => (
+              <Card key={i} className="h-[280px] bg-white/5 border-white/10 animate-pulse rounded-xl" />
+            ))
+          ) : brands.length > 0 ? (
+            brands.map((brand) => (
+              <BrandCard key={brand.id} brand={brand} onDelete={handleDelete} />
+            ))
+          ) : (
+            <div className="col-span-full">
+              <EmptyState isFirstTime={isFirstTime} onCreateBrand={() => navigate('/new-brand')} />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* BOTTOM ROW: Activity + Plan */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-4">
+          <h2 className="text-xs font-mono uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+            <Activity className="w-4 h-4 text-primary" /> Recent Activity
+          </h2>
+          <Card className="bg-[#050505] border-white/5 p-4 space-y-2">
+            {brands.length > 0 ? (
+              brands.slice(0, 5).map((brand) => (
+                <Link key={brand.id} to={`/project/${brand.id}`}>
+                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors cursor-pointer group">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full bg-primary shrink-0" />
+                      <div>
+                        <div className="text-sm font-medium text-white group-hover:text-primary transition-colors">{brand.name}</div>
+                        <div className="text-xs text-muted-foreground">{brand.industry || 'No industry set'}</div>
                       </div>
-                      <div className="text-sm font-medium">{brand.name}</div>
-                      <div className="text-xs text-muted-foreground">{brand.industry}</div>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-sm text-muted-foreground p-3">
-                    No activity yet. Forge your first brand to get started.
+                    <div className="flex items-center gap-3">
+                      <span className="text-[10px] text-white/30 font-mono">
+                        {new Date(brand.created_at).toLocaleDateString()}
+                      </span>
+                      <ArrowRight className="w-3 h-3 text-white/20 group-hover:text-primary transition-colors" />
+                    </div>
                   </div>
-                )}
+                </Link>
+              ))
+            ) : (
+              <div className="text-sm text-muted-foreground p-4 text-center">
+                No activity yet. Forge your first brand.
               </div>
-           </Card>
+            )}
+          </Card>
         </div>
 
-        <div className="col-span-1 space-y-6">
-           <h2 className="text-xl font-heading font-medium border-b border-white/10 pb-4 flex items-center gap-2"><Target className="w-5 h-5 text-primary"/> Market Signals</h2>
-           
-           <Card className="bg-[#050505] border-white/5 p-4 flex flex-col gap-4">
-              <div className="text-sm text-muted-foreground p-4">
-                Market signals will appear here as you run your engines.
+        <div className="space-y-4">
+          <h2 className="text-xs font-mono uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+            <ChartIcon className="w-4 h-4 text-primary" /> Plan Usage
+          </h2>
+          {planInfo && (
+            <Card className="bg-[#050505] border-white/5 p-5 space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium capitalize">{planInfo.label} Plan</span>
+                <Link to="/pricing">
+                  <span className="text-xs text-primary hover:underline cursor-pointer">Upgrade →</span>
+                </Link>
               </div>
-           </Card>
-           
-           <Link to="/signal" className="block mt-4">
-             <Button variant="outline" className="w-full bg-black border-white/10 text-xs text-white/70 hover:text-white hover:bg-white/5 uppercase tracking-widest font-bold">Open Signal Engine</Button>
-           </Link>
+              <div>
+                <div className="flex justify-between text-xs text-muted-foreground mb-2">
+                  <span>Brands used</span>
+                  <span>{planInfo.brandsUsed} / {planInfo.brandsLimit === 999 ? '∞' : planInfo.brandsLimit}</span>
+                </div>
+                <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-primary rounded-full transition-all"
+                    style={{ width: `${Math.min(planInfo.percentUsed, 100)}%` }}
+                  />
+                </div>
+              </div>
+              {planInfo.plan === 'free' && (
+                <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+                  <p className="text-xs text-white/60 mb-2">Unlock unlimited brands, priority AI, and more.</p>
+                  <Link to="/pricing">
+                    <Button size="sm" className="w-full bg-primary hover:bg-orange-600 text-white text-xs uppercase tracking-widest">
+                      Upgrade Now
+                    </Button>
+                  </Link>
+                </div>
+              )}
+              <div className="space-y-2 pt-2 border-t border-white/5">
+                <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">All Engines</p>
+                {[
+                  { name: 'Signal', color: 'bg-blue-500' },
+                  { name: 'Craft', color: 'bg-primary' },
+                  { name: 'Reach', color: 'bg-green-500' },
+                  { name: 'Pulse', color: 'bg-rose-500' },
+                  { name: 'Capital', color: 'bg-yellow-500' },
+                ].map(e => (
+                  <div key={e.name} className="flex items-center gap-2">
+                    <div className={`w-1.5 h-1.5 rounded-full ${e.color}`} />
+                    <span className="text-xs text-white/60">{e.name} Engine</span>
+                    <span className="ml-auto text-[10px] text-green-400 font-mono">ACTIVE</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
         </div>
       </div>
-
-       {planInfo && (
-         <div className="mt-8 p-4 rounded-xl bg-white/[0.02] border border-white/5">
-           <div className="flex justify-between items-center mb-2">
-             <span className="text-xs text-white/40 uppercase tracking-widest">Brand saves</span>
-             <span className="text-xs text-white/60">
-               {planInfo.brandsUsed} / {planInfo.brandsLimit === 999 ? '∞' : planInfo.brandsLimit}
-               <span className="ml-2 text-orange-400 capitalize">{planInfo.plan} plan</span>
-             </span>
-           </div>
-           <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-             <div
-               className="h-full bg-orange-500 rounded-full transition-all"
-               style={{ width: `${planInfo.percentUsed}%` }}
-             />
-           </div>
-           {planInfo.plan === 'free' && (
-             <p className="text-xs text-white/30 mt-2">
-               Free plan · <Link to="/pricing" className="text-orange-400 hover:underline">Upgrade for more brands</Link>
-             </p>
-           )}
-         </div>
-       )}
     </div>
   );
 }
