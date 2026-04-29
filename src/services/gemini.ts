@@ -2,6 +2,7 @@ import Groq from 'groq-sdk'
 
 const getGroqClient = (): Groq => {
   const apiKey = import.meta.env.VITE_GROQ_API_KEY || ''
+  console.log('Groq key present:', apiKey ? `${apiKey.slice(0,8)}...` : 'MISSING')
   return new Groq({ apiKey, dangerouslyAllowBrowser: true })
 }
 
