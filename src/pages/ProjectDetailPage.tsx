@@ -36,8 +36,15 @@ export default function ProjectDetailPage() {
         if (error) throw error;
         setBrand(data);
         // Data structure from select('*, signal_results(*), craft_results(*)')
-        setSignalResult(data.signal_results?.[0] || null);
-        setCraftResult(data.craft_results?.[0] || null);
+        const sr = Array.isArray(data.signal_results) 
+          ? data.signal_results[0] 
+          : data.signal_results
+        const cr = Array.isArray(data.craft_results) 
+          ? data.craft_results[0] 
+          : data.craft_results
+        setSignalResult(sr || null)
+        setCraftResult(cr || null)
+        console.log('Project data loaded:', { signal: sr, craft: cr })
 
         const { data: { user } } = await supabase.auth.getUser()
         if (user?.email && data.craft_results?.[0]) {

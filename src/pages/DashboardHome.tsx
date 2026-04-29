@@ -29,13 +29,18 @@ export default function DashboardHome() {
   }, [])
 
   useEffect(() => {
-    async function loadBrands() {
+    async function loadData() {
       try {
-        const { data, error } = await getBrands();
-        if (error) throw error;
-        setBrands(data || []);
+        setLoading(true)
+        const [{ data: brandsData }, planData] = await Promise.all([
+          getBrands(),
+          getUserPlan(),
+        ])
+        console.log('Dashboard brands loaded:', brandsData)
+        setBrands(brandsData || [])
+        setPlanInfo(planData)
         
-        if ((data || []).length === 0) {
+        if ((brandsData || []).length === 0) {
           const joined = user?.created_at;
           const isNew = joined && (Date.now() - new Date(joined).getTime()) < 1000 * 60 * 60 * 24 * 3;
           setIsFirstTime(!!isNew);
@@ -46,16 +51,13 @@ export default function DashboardHome() {
             sessionStorage.setItem('forge_welcome_seen', '1');
           }
         }
-        
-        const info = await getUserPlan();
-        setPlanInfo(info);
       } catch (err) {
-        console.error('Failed to load brands:', err);
+        console.error('Failed to load dashboard data:', err)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
-    loadBrands();
+    loadData();
   }, []);
 
   const handleDelete = async (id: string) => {

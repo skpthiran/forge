@@ -23,6 +23,7 @@ export default function SignalEnginePage() {
 
   const handleRunAnalysis = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Signal engine triggered', { idea, industry })
     if (!idea || !industry) {
       toast.error('Please describe your idea and industry.');
       return;
@@ -127,7 +128,12 @@ export default function SignalEnginePage() {
           </div>
 
           <Button 
+            type="submit"
             disabled={isAnalyzing}
+            onClick={(e) => {
+              e.preventDefault()
+              handleRunAnalysis(e as any)
+            }}
             className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white uppercase tracking-widest font-bold text-xs"
           >
             {isAnalyzing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing Signals...</> : "Run Signal Analysis"}
