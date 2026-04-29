@@ -32,7 +32,7 @@ const sidebarItems = [
   { icon: Send, label: 'Reach Engine', path: '/reach' },
   { icon: HeartPulse, label: 'Pulse Engine', path: '/pulse' },
   { icon: Briefcase, label: 'Capital Engine', path: '/capital' },
-  { icon: FolderOpen, label: 'Projects', path: '/dashboard' },
+  { icon: FolderOpen, label: 'Projects', path: '/projects' },
   { icon: CreditCard, label: 'Pricing', path: '/pricing' },
   { icon: Settings, label: 'Settings', path: '/settings' },
 ];

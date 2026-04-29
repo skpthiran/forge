@@ -183,32 +183,6 @@ export default function DashboardHome() {
         </div>
       </div>
 
-      {/* BRAND CARDS */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-heading font-medium flex items-center gap-2">
-            <Palette className="w-5 h-5 text-primary" /> Your Brands
-          </h2>
-          {brands.length > 0 && (
-            <span className="text-xs text-muted-foreground">{brands.length} total</span>
-          )}
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {loading ? (
-            [1, 2, 3].map(i => (
-              <Card key={i} className="h-[280px] bg-white/5 border-white/10 animate-pulse rounded-xl" />
-            ))
-          ) : brands.length > 0 ? (
-            brands.map((brand) => (
-              <BrandCard key={brand.id} brand={brand} onDelete={handleDelete} />
-            ))
-          ) : (
-            <div className="col-span-full">
-              <EmptyState isFirstTime={isFirstTime} onCreateBrand={() => navigate('/new-brand')} />
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* BOTTOM ROW: Activity + Plan */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

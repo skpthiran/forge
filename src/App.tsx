@@ -15,6 +15,7 @@ import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import SharePage from './pages/SharePage';
+import ProjectsPage from './pages/ProjectsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
@@ -30,6 +31,7 @@ export default function App() {
         {/* Dashboard Routes wrapped in Layout */}
         <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<DashboardHome />} />
+          <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/new-brand" element={<DemoGeneratorPage />} />
           <Route path="/signal" element={<SignalEnginePage />} />
           <Route path="/craft" element={<CraftEnginePage />} />
