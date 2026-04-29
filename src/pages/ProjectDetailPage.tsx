@@ -40,14 +40,18 @@ export default function ProjectDetailPage() {
 
         const { data: { user } } = await supabase.auth.getUser()
         if (user?.email && data.craft_results?.[0]) {
-          sendBlueprintEmail({
-            userEmail: user.email,
-            brandName: data.name || '',
-            industry: data.industry || '',
-            demandScore: data.signal_results?.[0]?.demand_score,
-            competitionLevel: data.signal_results?.[0]?.competition_level,
-            tagline: data.craft_results?.[0]?.selected_tagline,
-          })
+          const emailKey = `forge_email_sent_${id}`
+          if (!sessionStorage.getItem(emailKey)) {
+            sessionStorage.setItem(emailKey, '1')
+            sendBlueprintEmail({
+              userEmail: user.email,
+              brandName: data.name || '',
+              industry: data.industry || '',
+              demandScore: data.signal_results?.[0]?.demand_score,
+              competitionLevel: data.signal_results?.[0]?.competition_level,
+              tagline: data.craft_results?.[0]?.selected_tagline,
+            })
+          }
         }
       } catch (err) {
         console.error('Error loading project:', err);
@@ -145,10 +149,10 @@ export default function ProjectDetailPage() {
                      <div className="w-8 h-8 rounded bg-primary/20 flex items-center justify-center text-primary"><Palette className="w-4 h-4"/></div>
                      <h3 className="text-sm font-heading tracking-widest uppercase text-white group-hover:text-primary transition-colors">Identity & Voice</h3>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-4">{craftResult?.brand_voice?.tone || 'Tone not yet defined.'} {craftResult?.brand_voice?.personality || ''}</p>
+                  <p className="text-xs text-muted-foreground mb-4">{craftResult?.brand_voice?.tone || 'Tone not yet defined.'} {craftResult?.brand_voice?.vibe || ''}</p>
                   <div className="flex gap-2">
                      {craftResult?.color_palette?.map((c: any, i: number) => (
-                       <span key={i} className="w-4 h-4 rounded-full border border-white/10" style={{ backgroundColor: c.hex }} title={c.name} />
+                       <span key={i} className="w-4 h-4 rounded-full border border-white/10" style={{ backgroundColor: c.hex }} title={c.label} />
                      )) || <span className="text-[10px] text-white/20">No colors set</span>}
                   </div>
                </Card>
@@ -213,15 +217,21 @@ export default function ProjectDetailPage() {
                   <Cpu className="w-32 h-32 text-primary" />
                </div>
                <h3 className="text-xs uppercase tracking-widest text-primary mb-6 font-mono relative z-10 flex items-center gap-2"><Sparkles className="w-3 h-3"/> AI Recommendations</h3>
-               <div className="space-y-4 relative z-10">
+                <div className="space-y-4 relative z-10">
                   <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-200 text-sm leading-relaxed">
-                    Consider launching with a limited drop model (pre-order) to validate demand before investing in bulk inventory.
+                    {signalResult?.market_gap
+                      ? `Market opportunity: ${signalResult.market_gap}`
+                      : 'Run the Signal Engine to get your market opportunity analysis.'}
                   </div>
                   <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-200 text-sm leading-relaxed">
-                    Your target audience reacts well to behind-the-scenes founder content. Begin documenting your supplier search process now.
+                    {signalResult?.opportunity_window
+                      ? `Your launch window is ${signalResult.opportunity_window}. Act within this timeframe to capture first-mover advantage.`
+                      : 'Run the Signal Engine to see your optimal launch window.'}
                   </div>
                   <div className="p-4 rounded-lg bg-white/5 border border-white/10 text-white/70 text-sm leading-relaxed">
-                    "Void 5-Inch Shorts" have the highest margin potential. Feature them prominently in Meta Ad carousels.
+                    {craftResult?.product_concepts?.[0]
+                      ? `"${craftResult.product_concepts[0].name}" (${craftResult.product_concepts[0].price}) has the highest margin potential. Feature it in your first marketing push.`
+                      : 'Run the Craft Engine to generate your product concepts.'}
                   </div>
                </div>
             </Card>

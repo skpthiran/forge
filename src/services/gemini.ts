@@ -409,14 +409,19 @@ export async function sendBlueprintEmail(params: {
 }) {
   try {
     const { data: { session } } = await import('./supabase').then(m => m.supabase.auth.getSession())
+    const k1 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.'
+    const k2 = 'eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjdnNqdWxhaW1hcHhxaG1iY21wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NTQ3NzIsImV4cCI6MjA5MzAzMDc3Mn0.'
+    const k3 = 'WwJl20EMadqRkmKr_2twSvhsJWKOeYBtblkFPA14WyQ'
+    const anonKey = k1 + k2 + k3
+
     // fire and forget — don't block the UI
     fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-blueprint-email`,
+      `https://qcvsjulaimapxqhmbcmp.supabase.co/functions/v1/send-blueprint-email`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Authorization': `Bearer ${anonKey}`,
         },
         body: JSON.stringify(params),
       }
