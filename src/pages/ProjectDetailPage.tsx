@@ -18,6 +18,14 @@ export default function ProjectDetailPage() {
   const [signalResult, setSignalResult] = useState<any>(null);
   const [craftResult, setCraftResult] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = () => {
+    const url = `${window.location.origin}/b/${id}`
+    navigator.clipboard.writeText(url)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   useEffect(() => {
     async function loadData() {
@@ -217,6 +225,14 @@ export default function ProjectDetailPage() {
                   </div>
                </div>
             </Card>
+
+            <Button
+              onClick={handleShare}
+              variant="outline"
+              className="w-full h-12 border-white/10 text-white/60 hover:text-white hover:border-white/30 uppercase tracking-widest font-bold text-xs"
+            >
+              {copied ? '✓ Link Copied!' : '🔗 Share Brand Page'}
+            </Button>
 
             <Button 
                onClick={handleExportPDF}

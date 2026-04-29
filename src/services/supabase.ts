@@ -229,3 +229,12 @@ export const getProfile = async () => {
     .single()
   return { data, error }
 }
+
+export const getPublicBrand = async (id: string) => {
+  const { data, error } = await supabase
+    .from('brands')
+    .select('name, idea, industry, target_audience, price_point, launch_readiness, status, created_at, signal_results(demand_score, competition_level, audience_heat, market_gap, opportunity_window), craft_results(selected_tagline, taglines, brand_voice, color_palette, product_concepts)')
+    .eq('id', id)
+    .single()
+  return { data, error }
+}

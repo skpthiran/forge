@@ -14,6 +14,7 @@ import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import SharePage from './pages/SharePage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
@@ -24,6 +25,7 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/b/:id" element={<SharePage />} />
         
         {/* Dashboard Routes wrapped in Layout */}
         <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
