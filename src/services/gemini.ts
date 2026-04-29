@@ -1,5 +1,13 @@
 import Groq from 'groq-sdk'
 
+export function track(event: string, properties?: Record<string, any>) {
+  try {
+    if (typeof window !== 'undefined' && (window as any).posthog) {
+      (window as any).posthog.capture(event, properties)
+    }
+  } catch {}
+}
+
 const getGroqClient = (): Groq => {
   // Split key to bypass GitHub secret scanning
   const part1 = 'gsk_UIci5VYTE2XCayvwIHLX'
@@ -81,6 +89,7 @@ No markdown. No explanation. No code blocks. Raw JSON only.
   const text = completion.choices[0]?.message?.content || ''
   const cleaned = text.replace(/```json|```/g, '').trim()
   const parsed = JSON.parse(cleaned)
+  track('signal_engine_run', { industry })
   return { ...parsed, raw_response: text }
 }
 
@@ -171,6 +180,7 @@ No markdown. No explanation. No code blocks. Raw JSON only.
   const text = completion.choices[0]?.message?.content || ''
   const cleaned = text.replace(/```json|```/g, '').trim()
   const parsed = JSON.parse(cleaned)
+  track('craft_engine_run', { industry })
   return {
     ...parsed,
     selected_name: parsed.brand_names[0],
@@ -251,6 +261,7 @@ No markdown. No explanation. No code blocks. Raw JSON only.
   const text = completion.choices[0]?.message?.content || ''
   const cleaned = text.replace(/```json|```/g, '').trim()
   const parsed = JSON.parse(cleaned)
+  track('reach_engine_run', { industry })
   return { ...parsed, raw_response: text }
 }
 
@@ -312,6 +323,7 @@ No markdown. No explanation. No code blocks. Raw JSON only.
   const text = completion.choices[0]?.message?.content || ''
   const cleaned = text.replace(/```json|```/g, '').trim()
   const parsed = JSON.parse(cleaned)
+  track('pulse_engine_run', {})
   return { ...parsed, raw_response: text }
 }
 
@@ -383,6 +395,7 @@ No markdown. No explanation. No code blocks. Raw JSON only.
   const text = completion.choices[0]?.message?.content || ''
   const cleaned = text.replace(/```json|```/g, '').trim()
   const parsed = JSON.parse(cleaned)
+  track('capital_engine_run', {})
   return { ...parsed, raw_response: text }
 }
 
@@ -408,6 +421,7 @@ export async function sendBlueprintEmail(params: {
         body: JSON.stringify(params),
       }
     ).catch(console.error)
+    track('blueprint_email_sent', { brandName: params.brandName })
   } catch (e) {
     console.error('Email send failed silently:', e)
   }
