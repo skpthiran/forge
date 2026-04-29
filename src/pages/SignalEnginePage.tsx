@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Target, TrendingUp, AlertCircle, Activity, Globe, Zap, LineChart, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { runSignalEngine, SignalResult } from '../services/gemini';
+import { createBrand, saveSignalResult, getBrands } from '../services/supabase';
 import { toast } from 'sonner';
 
 export default function SignalEnginePage() {
@@ -34,6 +35,41 @@ export default function SignalEnginePage() {
       const data = await runSignalEngine(idea, industry, targetAudience, pricePoint, market);
       setResult(data);
       setHasResult(true);
+
+      // Save logic
+      try {
+        const { data: brands } = await getBrands()
+        let brandId: string | null = null
+        
+        if (brands && brands.length > 0) {
+          brandId = brands[0].id
+        } else {
+          const { data: newBrand } = await createBrand({
+            name: 'Signal Analysis',
+            idea: idea,
+            industry: industry,
+            target_audience: targetAudience,
+            price_point: pricePoint,
+          })
+          brandId = newBrand?.id || null
+        }
+
+        if (brandId) {
+          await saveSignalResult(brandId, {
+            demand_score: data.demand_score,
+            competition_level: data.competition_level,
+            audience_heat: data.audience_heat,
+            market_gap: data.market_gap,
+            opportunity_window: data.opportunity_window,
+            insights: data.insights,
+            competitor_map: data.competitor_map,
+            pain_points: data.pain_points,
+            raw_response: data.raw_response,
+          })
+        }
+      } catch (e) {
+        console.error('Signal save error:', e)
+      }
     } catch (err: any) {
       console.error(err);
       toast.error('Analysis failed: ' + (err.message || 'Unknown error'));

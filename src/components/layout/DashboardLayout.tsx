@@ -21,6 +21,8 @@ import { motion } from 'motion/react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '../../contexts/AuthContext';
+import { getProfile } from '../../services/supabase'
+import { useEffect } from 'react';
 
 const sidebarItems = [
   { icon: Home, label: 'Dashboard', path: '/dashboard' },
@@ -30,7 +32,7 @@ const sidebarItems = [
   { icon: Send, label: 'Reach Engine', path: '/reach' },
   { icon: HeartPulse, label: 'Pulse Engine', path: '/pulse' },
   { icon: Briefcase, label: 'Capital Engine', path: '/capital' },
-  { icon: FolderOpen, label: 'Projects', path: '/project/ironbloom' },
+  { icon: FolderOpen, label: 'Projects', path: '/dashboard' },
   { icon: CreditCard, label: 'Pricing', path: '/pricing' },
   { icon: Settings, label: 'Settings', path: '/settings' },
 ];
@@ -38,6 +40,13 @@ const sidebarItems = [
 function SidebarContent({ isMobile = false, setIsOpen }: { isMobile?: boolean, setIsOpen?: (v: boolean) => void }) {
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const [plan, setPlan] = useState('Free')
+
+  useEffect(() => {
+    getProfile().then(({ data }) => {
+      if (data?.plan) setPlan(data.plan.charAt(0).toUpperCase() + data.plan.slice(1))
+    })
+  }, [])
 
   return (
     <>
@@ -96,7 +105,7 @@ function SidebarContent({ isMobile = false, setIsOpen }: { isMobile?: boolean, s
             <span className="text-sm font-medium truncate max-w-[150px]">
               {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
             </span>
-            <span className="text-xs text-muted-foreground">Starter</span>
+            <span className="text-xs text-muted-foreground">{plan}</span>
           </div>
         </div>
         <Button 

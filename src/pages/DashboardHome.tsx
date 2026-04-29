@@ -145,28 +145,22 @@ export default function DashboardHome() {
            </div>
            
            <Card className="bg-[#050505] border-white/5 p-6">
-              <div className="space-y-6 relative before:absolute before:inset-0 before:ml-[1.4rem] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-[1px] before:bg-gradient-to-b before:from-primary/50 before:via-white/10 before:to-transparent">
-                 {[
-                   { engine: "Signal Engine", action: "Detected shifting trends in men's sizing.", detail: "Market data shows 24% increase in 'oversized' search volume.", time: "2 hours ago", color: "text-blue-400", bg: "bg-blue-500/20", icon: ChartIcon },
-                   { engine: "Craft Engine", action: "Finalized color palette for latest brand.", detail: "Aesthetic aligned to target audience preferences.", time: "1 day ago", color: "text-purple-400", bg: "bg-purple-500/20", icon: Palette }
-                 ].map((activity, i) => (
-                   <div key={i} className="relative flex items-start md:items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                     <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white/10 bg-black shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 text-white/80 relative overflow-hidden group-hover:border-white/30 transition-colors mt-1 md:mt-0">
-                       <activity.icon className="w-4 h-4 relative z-10" />
-                       <div className={`absolute inset-0 ${activity.bg}`} />
-                     </div>
-                     
-                     <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-5 rounded-xl border border-white/5 bg-black shadow-sm group-hover:border-white/10 transition-colors relative overflow-hidden">
-                       <div className={`absolute left-0 top-0 bottom-0 w-1 ${activity.bg.replace('/20', '')}`} />
-                       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
-                         <span className={`text-[10px] font-mono uppercase tracking-widest ${activity.color} bg-white/5 px-2 py-0.5 rounded w-fit`}>{activity.engine}</span>
-                         <time className="text-[10px] text-white/40 font-mono uppercase tracking-widest">{activity.time}</time>
-                       </div>
-                       <div className="text-sm font-medium text-white/90 mb-1 leading-snug">{activity.action}</div>
-                       <div className="text-xs text-white/50">{activity.detail}</div>
-                     </div>
-                   </div>
-                 ))}
+              <div className="space-y-3">
+                {brands && brands.length > 0 ? (
+                  brands.slice(0, 3).map((brand) => (
+                    <div key={brand.id} className="flex items-center gap-3 p-3 rounded-lg bg-black/50 border border-white/5">
+                      <div className="text-[10px] text-muted-foreground font-mono uppercase">
+                        {new Date(brand.created_at).toLocaleDateString()}
+                      </div>
+                      <div className="text-sm font-medium">{brand.name}</div>
+                      <div className="text-xs text-muted-foreground">{brand.industry}</div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-sm text-muted-foreground p-3">
+                    No activity yet. Forge your first brand to get started.
+                  </div>
+                )}
               </div>
            </Card>
         </div>
@@ -175,29 +169,9 @@ export default function DashboardHome() {
            <h2 className="text-xl font-heading font-medium border-b border-white/10 pb-4 flex items-center gap-2"><Target className="w-5 h-5 text-primary"/> Market Signals</h2>
            
            <Card className="bg-[#050505] border-white/5 p-4 flex flex-col gap-4">
-              <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5 relative overflow-hidden">
-                <div className="flex gap-2 items-start">
-                   <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                   <div>
-                     <h4 className="text-xs font-bold uppercase tracking-widest text-red-400 mb-1">Competitor Action</h4>
-                     <p className="text-sm text-red-200/80 leading-relaxed mb-3">Major player just dropped a new collection in your niche. You need to differentiate positioning ASAP.</p>
-                     <Button size="sm" className="h-7 text-[10px] bg-red-500/20 hover:bg-red-500/40 text-red-100 border border-red-500/30 uppercase tracking-widest">Adjust Strategy</Button>
-                   </div>
-                </div>
+              <div className="text-sm text-muted-foreground p-4">
+                Market signals will appear here as you run your engines.
               </div>
-              
-              {[
-                { title: "Trending Aesthetic", desc: "Gymwear with minimalist identity is rising among 18–25 male audiences.", tag: "Opportunity" },
-                { title: "Pain Point Spike", desc: "Customers complain about poor fit in budget activewear in EU markets.", tag: "Product Gap" },
-              ].map((signal, i) => (
-                <div key={i} className="p-4 rounded-xl border border-white/5 bg-black hover:border-white/20 transition-colors flex flex-col gap-2 group cursor-pointer">
-                  <div className="flex justify-between items-start">
-                     <span className="text-[10px] uppercase font-mono tracking-widest text-primary border border-primary/20 px-1.5 py-0.5 rounded bg-primary/10">{signal.tag}</span>
-                  </div>
-                  <h4 className="text-sm font-medium text-white/90">{signal.title}</h4>
-                  <p className="text-xs text-white/50 leading-relaxed">{signal.desc}</p>
-                </div>
-              ))}
            </Card>
            
            <Link to="/signal" className="block mt-4">

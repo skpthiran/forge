@@ -16,13 +16,12 @@ export interface BrandKitData {
   // Craft
   brandVoice?: {
     tone?: string
-    personality?: string
-    writingStyle?: string
-    avoid?: string
+    vibe?: string
+    writing_example?: string
   }
-  colorPalette?: { name: string; hex: string; usage: string }[]
+  colorPalette?: { label: string; hex: string }[]
   typography?: { heading?: string; body?: string }
-  productConcepts?: { name: string; price: string; description: string }[]
+  productConcepts?: { name: string; price: string; desc: string }[]
   taglines?: string[]
 }
 
@@ -183,7 +182,7 @@ export const exportBrandKitPDF = (data: BrandKitData) => {
       doc.setFont('helvetica', 'bold')
       doc.text(color.hex.toUpperCase(), margin + i * 36, y + 22)
       doc.setFont('helvetica', 'normal')
-      doc.text(color.name, margin + i * 36, y + 27)
+      doc.text(color.label, margin + i * 36, y + 27)
     })
     y += 34
   }
@@ -219,9 +218,8 @@ export const exportBrandKitPDF = (data: BrandKitData) => {
     y += 8
     const voiceItems = [
       { label: 'Tone', value: data.brandVoice.tone },
-      { label: 'Personality', value: data.brandVoice.personality },
-      { label: 'Writing Style', value: data.brandVoice.writingStyle },
-      { label: 'Avoid', value: data.brandVoice.avoid },
+      { label: 'Vibe', value: data.brandVoice.vibe },
+      { label: 'Writing Example', value: data.brandVoice.writing_example },
     ].filter(v => v.value)
 
     voiceItems.forEach((item) => {
@@ -305,7 +303,7 @@ export const exportBrandKitPDF = (data: BrandKitData) => {
       textCol(150, 150, 150)
       doc.setFontSize(8)
       doc.setFont('helvetica', 'normal')
-      const lines = doc.splitTextToSize(product.description, W - margin * 2 - 12)
+      const lines = doc.splitTextToSize(product.desc, W - margin * 2 - 12)
       doc.text(lines.slice(0, 2), margin + 6, y + 17)
       y += 30
     })

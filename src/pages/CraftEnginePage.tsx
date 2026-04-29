@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Palette, PenTool, Type, Sparkles, Box, Wand2, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { runCraftEngine, CraftResult } from '../services/gemini';
+import { createBrand, saveCraftResult, getBrands } from '../services/supabase';
 import { toast } from 'sonner';
 
 export default function CraftEnginePage() {
@@ -41,6 +42,41 @@ export default function CraftEnginePage() {
       setHasResult(true);
       setIsFormExpanded(false);
       toast.success('Identity forged!');
+
+      // Save logic
+      try {
+        const { data: brands } = await getBrands()
+        let brandId: string | null = null
+
+        if (brands && brands.length > 0) {
+          brandId = brands[0].id
+        } else {
+          const { data: newBrand } = await createBrand({
+            name: data.selected_name || 'Craft Analysis',
+            idea: idea,
+            industry: industry,
+            target_audience: targetAudience,
+            price_point: pricePoint,
+          })
+          brandId = newBrand?.id || null
+        }
+
+        if (brandId) {
+          await saveCraftResult(brandId, {
+            brand_names: data.brand_names,
+            selected_name: data.selected_name,
+            taglines: data.taglines,
+            selected_tagline: data.selected_tagline,
+            brand_voice: data.brand_voice,
+            color_palette: data.color_palette,
+            typography: data.typography,
+            product_concepts: data.product_concepts,
+            raw_response: data.raw_response,
+          })
+        }
+      } catch (e) {
+        console.error('Craft save error:', e)
+      }
     } catch (err: any) {
       console.error(err);
       toast.error('Forging failed: ' + (err.message || 'Unknown error'));

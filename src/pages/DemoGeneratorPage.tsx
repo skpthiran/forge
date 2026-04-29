@@ -7,9 +7,9 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { BrainCircuit, Sparkles, Target, Palette, Zap, FileText, Rocket, CheckCircle2, Download, Save, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import { runSignalEngine, runCraftEngine, SignalResult, CraftResult } from '../services/gemini';
-import { supabase } from '../services/supabase';
+import { createBrand, saveSignalResult, saveCraftResult, getProfile, supabase } from '../services/supabase'
+import { toast } from 'sonner'
 
 export default function DemoGeneratorPage() {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -73,52 +73,69 @@ export default function DemoGeneratorPage() {
     }
   };
 
+  const [isSaving, setIsSaving] = useState(false)
+
   const handleSave = async () => {
+    if (!signalResult || !craftResult) return
+    setIsSaving(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { 
-        toast.error('Please sign in first'); 
-        navigate('/login');
-        return 
-      }
-
-      // Check free plan limit
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('plan, brands_saved')
-        .eq('id', user.id)
-        .single()
-
-      if (profile?.plan === 'free' && (profile?.brands_saved || 0) >= 3) {
-        toast.error('Free plan limit reached (3 brands). Please upgrade.');
-        navigate('/pricing');
+      const { data: profile } = await getProfile()
+      const planLimits = { free: 3, starter: 10, builder: 30, pro: 999 }
+      const plan = profile?.plan || 'free'
+      const used = profile?.brands_used || 0
+      if (used >= planLimits[plan as keyof typeof planLimits]) {
+        toast.error(`Plan limit reached. Upgrade to create more brands.`)
+        setIsSaving(false)
         return
       }
 
-      // Save the brand
-      const { error } = await supabase.from('brands').insert({
-        user_id: user.id,
-        brand_name: craftResult?.selected_name || 'Untitled Brand',
-        tagline: craftResult?.selected_tagline || '',
-        signal_data: signalResult,
-        craft_data: craftResult,
+      const { data: brand, error: brandError } = await createBrand({
+        name: craftResult.selected_name,
+        idea: idea,
+        industry: industry,
+        target_audience: targetAudience,
+        price_point: pricePoint,
+      })
+      if (brandError || !brand) throw brandError
+
+      await saveSignalResult(brand.id, {
+        demand_score: signalResult.demand_score,
+        competition_level: signalResult.competition_level,
+        audience_heat: signalResult.audience_heat,
+        market_gap: signalResult.market_gap,
+        opportunity_window: signalResult.opportunity_window,
+        insights: signalResult.insights,
+        competitor_map: signalResult.competitor_map,
+        pain_points: signalResult.pain_points,
+        raw_response: signalResult.raw_response,
       })
 
-      if (error) throw error
+      await saveCraftResult(brand.id, {
+        brand_names: craftResult.brand_names,
+        selected_name: craftResult.selected_name,
+        taglines: craftResult.taglines,
+        selected_tagline: craftResult.selected_tagline,
+        brand_voice: craftResult.brand_voice,
+        color_palette: craftResult.color_palette,
+        typography: craftResult.typography,
+        product_concepts: craftResult.product_concepts,
+        raw_response: craftResult.raw_response,
+      })
 
-      // Increment brands_saved counter
       await supabase
         .from('profiles')
-        .update({ brands_saved: (profile?.brands_saved || 0) + 1 })
-        .eq('id', user.id)
+        .update({ brands_used: used + 1 })
+        .eq('id', (await supabase.auth.getUser()).data.user?.id)
 
-      toast.success('Brand saved! View it in your Command Center.');
-      navigate('/dashboard');
+      toast.success('Brand saved to your Command Center!')
+      navigate('/dashboard')
     } catch (err) {
-      console.error('Save error:', err)
-      toast.error('Failed to save. Please try again.')
+      console.error(err)
+      toast.error('Failed to save brand. Please try again.')
+    } finally {
+      setIsSaving(false)
     }
-  };
+  }
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-700 pb-12">
