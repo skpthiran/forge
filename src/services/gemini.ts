@@ -1,9 +1,9 @@
 import Groq from 'groq-sdk'
 
-const groq = new Groq({
-  apiKey: import.meta.env.VITE_GROQ_API_KEY,
-  dangerouslyAllowBrowser: true
-})
+const getGroqClient = (): Groq => {
+  const apiKey = import.meta.env.VITE_GROQ_API_KEY || ''
+  return new Groq({ apiKey, dangerouslyAllowBrowser: true })
+}
 
 // ============================================
 // SIGNAL ENGINE — Market Intelligence
@@ -28,6 +28,7 @@ export const runSignalEngine = async (
   pricePoint: string,
   market: string = 'Global'
 ): Promise<SignalResult> => {
+  const groq = getGroqClient()
   const prompt = `
 You are FORGE Signal Engine — an expert market intelligence AI.
 
@@ -110,6 +111,7 @@ export const runCraftEngine = async (
   pricePoint: string,
   marketGap: string = ''
 ): Promise<CraftResult> => {
+  const groq = getGroqClient()
   const prompt = `
 You are FORGE Craft Engine — an expert brand identity AI.
 
