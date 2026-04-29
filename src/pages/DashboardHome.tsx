@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import EmptyState from '../components/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,9 +10,13 @@ import { Input } from '@/components/ui/input';
 import { getBrands, Brand, getUserPlan, PLAN_LIMITS } from '../services/supabase';
 
 export default function DashboardHome() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [planInfo, setPlanInfo] = useState<{ plan: string; brandCount: number; limit: number } | null>(null);
+  const [isFirstTime, setIsFirstTime] = useState(false);
+  const [showWelcomeBanner, setShowWelcomeBanner] = useState(false);
 
   useEffect(() => {
     async function loadBrands() {
@@ -18,6 +24,18 @@ export default function DashboardHome() {
         const { data, error } = await getBrands();
         if (error) throw error;
         setBrands(data || []);
+        
+        if ((data || []).length === 0) {
+          const joined = user?.created_at;
+          const isNew = joined && (Date.now() - new Date(joined).getTime()) < 1000 * 60 * 60 * 24 * 3;
+          setIsFirstTime(!!isNew);
+        } else {
+          const seen = sessionStorage.getItem('forge_welcome_seen');
+          if (!seen) {
+            setShowWelcomeBanner(true);
+            sessionStorage.setItem('forge_welcome_seen', '1');
+          }
+        }
         
         const info = await getUserPlan();
         setPlanInfo(info);
@@ -68,7 +86,25 @@ export default function DashboardHome() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+       {showWelcomeBanner && (
+         <div className="mb-6 flex items-center justify-between p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 animate-in slide-in-from-top duration-500">
+           <div className="flex items-center gap-3">
+             <span className="text-orange-400 text-lg">⚡</span>
+             <div>
+               <p className="text-sm font-bold text-white">Welcome back to FORGE</p>
+               <p className="text-xs text-white/40">Open any brand to continue building or run a new engine.</p>
+             </div>
+           </div>
+           <button
+             onClick={() => setShowWelcomeBanner(false)}
+             className="text-white/20 hover:text-white/60 transition-colors text-lg shrink-0 ml-4"
+           >
+             ×
+           </button>
+         </div>
+       )}
+
+       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {loading ? (
           [1,2,3,4].map(i => (
             <Card key={i} className="h-[280px] bg-white/5 border-white/10 animate-pulse rounded-xl" />
@@ -103,18 +139,12 @@ export default function DashboardHome() {
             </Link>
           ))
         ) : (
-          <Card className="col-span-full p-12 bg-[#050505] border-white/5 border-dashed flex flex-col items-center justify-center text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
-              <BrainCircuit className="w-8 h-8 text-muted-foreground" />
-            </div>
-            <div>
-              <h3 className="text-xl font-medium text-white">No brands forged yet</h3>
-              <p className="text-muted-foreground max-w-xs mx-auto mt-2">Start your first brand project to see it here in the command center.</p>
-            </div>
-            <Link to="/demo">
-              <Button variant="outline" className="border-white/10 hover:bg-white/5">Forge Your First Brand</Button>
-            </Link>
-          </Card>
+          <div className="col-span-full">
+            <EmptyState
+              isFirstTime={isFirstTime}
+              onCreateBrand={() => navigate('/new-brand')}
+            />
+          </div>
         )}
       </div>
 
