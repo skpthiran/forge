@@ -1,29 +1,90 @@
 import { useParams } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, Circle, ArrowRight, Activity, Palette, Package, FileText, Rocket, Cpu, Download, Sparkles } from 'lucide-react';
+import { CheckCircle2, Circle, ArrowRight, Activity, Palette, Package, FileText, Rocket, Cpu, Download, Sparkles, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { getBrandById, Brand } from '../services/supabase';
+import { exportBrandKitPDF } from '../utils/exportPDF';
+import { useEffect, useState } from 'react';
 
 export default function ProjectDetailPage() {
   const { id } = useParams();
+  const [brand, setBrand] = useState<Brand | null>(null);
+  const [signalResult, setSignalResult] = useState<any>(null);
+  const [craftResult, setCraftResult] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      if (!id) return;
+      try {
+        const { data, error } = await getBrandById(id);
+        if (error) throw error;
+        setBrand(data);
+        // Data structure from select('*, signal_results(*), craft_results(*)')
+        setSignalResult(data.signal_results?.[0] || null);
+        setCraftResult(data.craft_results?.[0] || null);
+      } catch (err) {
+        console.error('Error loading project:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [id]);
+
+  const handleExportPDF = () => {
+    if (!brand) return;
+    exportBrandKitPDF({
+      brandName: brand.name || 'Brand',
+      tagline: brand.idea || craftResult?.selected_tagline || '',
+      industry: brand.industry || '',
+      targetAudience: brand.target_audience || '',
+      pricePoint: brand.price_point || '',
+      // Signal data
+      demandScore: signalResult?.demand_score,
+      competitionLevel: signalResult?.competition_level,
+      audienceHeat: signalResult?.audience_heat,
+      marketGap: signalResult?.market_gap,
+      opportunityWindow: signalResult?.opportunity_window,
+      painPoints: signalResult?.pain_points as string[] | undefined,
+      // Craft data
+      brandVoice: craftResult?.brand_voice as any,
+      colorPalette: craftResult?.color_palette as any,
+      typography: craftResult?.typography as any,
+      productConcepts: craftResult?.product_concepts as any,
+      taglines: craftResult?.taglines as string[] | undefined,
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="h-[60vh] flex flex-col items-center justify-center gap-4 animate-in fade-in duration-500"><Loader2 className="w-8 h-8 text-primary animate-spin" /><p className="text-muted-foreground font-mono text-xs uppercase tracking-widest">Forging Project Details...</p></div>
+    );
+  }
+
+  if (!brand) {
+    return (
+      <div className="h-[60vh] flex flex-col items-center justify-center gap-4"><AlertCircle className="w-8 h-8 text-red-400" /><p className="text-muted-foreground">Project not found.</p></div>
+    );
+  }
   
   return (
     <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in duration-700 pb-12">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-white/10 pb-6">
         <div>
            <Badge variant="outline" className="mb-4 border-primary text-primary bg-primary/10 uppercase tracking-widest text-[10px]">Brand Project</Badge>
-           <h1 className="text-4xl lg:text-5xl font-heading font-medium tracking-tight mb-2">IronBloom</h1>
-           <p className="text-muted-foreground text-lg">Premium Gymwear for Disciplined Young Men</p>
+           <h1 className="text-4xl lg:text-5xl font-heading font-medium tracking-tight mb-2">{brand.name}</h1>
+           <p className="text-muted-foreground text-lg">{brand.idea}</p>
         </div>
         <div className="flex items-center gap-6">
            <div className="text-right">
               <div className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-1">Brand Health</div>
-              <div className="text-3xl font-light text-green-400">84%</div>
+              <div className="text-3xl font-light text-green-400">{signalResult?.demand_score || '—'}%</div>
            </div>
            <div className="text-right">
               <div className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-1">Launch Readiness</div>
-              <div className="text-3xl font-light text-white">45%</div>
+              <div className="text-3xl font-light text-white">{brand.launch_readiness || 0}%</div>
            </div>
         </div>
       </div>
@@ -36,12 +97,11 @@ export default function ProjectDetailPage() {
                      <div className="w-8 h-8 rounded bg-primary/20 flex items-center justify-center text-primary"><Palette className="w-4 h-4"/></div>
                      <h3 className="text-sm font-heading tracking-widest uppercase text-white group-hover:text-primary transition-colors">Identity & Voice</h3>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-4">Dark luxury aesthetics. Quiet confident tone. Primary typeface Outift.</p>
+                  <p className="text-xs text-muted-foreground mb-4">{craftResult?.brand_voice?.tone || 'Tone not yet defined.'} {craftResult?.brand_voice?.personality || ''}</p>
                   <div className="flex gap-2">
-                     <span className="w-4 h-4 rounded-full bg-[#050505] border border-white/10" />
-                     <span className="w-4 h-4 rounded-full bg-[#1C1C1E] border border-white/10" />
-                     <span className="w-4 h-4 rounded-full bg-[#F97316] border border-white/10" />
-                     <span className="w-4 h-4 rounded-full bg-[#F4F4F5] border border-white/10" />
+                     {craftResult?.color_palette?.map((c: any, i: number) => (
+                       <span key={i} className="w-4 h-4 rounded-full border border-white/10" style={{ backgroundColor: c.hex }} title={c.name} />
+                     )) || <span className="text-[10px] text-white/20">No colors set</span>}
                   </div>
                </Card>
                <Card className="p-6 bg-[#050505] border-white/10 hover:border-blue-500/50 transition-colors cursor-pointer group">
@@ -50,9 +110,9 @@ export default function ProjectDetailPage() {
                      <h3 className="text-sm font-heading tracking-widest uppercase text-white group-hover:text-blue-400 transition-colors">Market Intel</h3>
                   </div>
                   <div className="space-y-2">
-                     <div className="flex justify-between text-xs"><span className="text-white/50">Demand</span><span className="text-green-400">High</span></div>
-                     <div className="flex justify-between text-xs"><span className="text-white/50">Competition</span><span className="text-orange-400">High</span></div>
-                     <div className="flex justify-between text-xs"><span className="text-white/50">Price Point</span><span className="text-white">$45 - $60</span></div>
+                     <div className="flex justify-between text-xs"><span className="text-white/50">Demand</span><span className="text-green-400">{signalResult?.demand_score ? 'High' : '—'}</span></div>
+                     <div className="flex justify-between text-xs"><span className="text-white/50">Competition</span><span className="text-orange-400">{signalResult?.competition_level || '—'}</span></div>
+                     <div className="flex justify-between text-xs"><span className="text-white/50">Price Point</span><span className="text-white">{brand.price_point || '—'}</span></div>
                   </div>
                </Card>
                <Card className="p-6 bg-[#050505] border-white/10 hover:border-green-500/50 transition-colors cursor-pointer group">
@@ -60,7 +120,7 @@ export default function ProjectDetailPage() {
                      <div className="w-8 h-8 rounded bg-green-500/20 flex items-center justify-center text-green-400"><Package className="w-4 h-4"/></div>
                      <h3 className="text-sm font-heading tracking-widest uppercase text-white group-hover:text-green-400 transition-colors">Product Strategy</h3>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-4">3 active SKUs prepared for Drop 01. Blended gross margin 62%.</p>
+                  <p className="text-xs text-muted-foreground mb-4">{craftResult?.product_concepts?.length || 0} active SKUs prepared for Drop 01.</p>
                   <p className="text-xs text-green-400 font-mono">View Tech Packs &rarr;</p>
                </Card>
                <Card className="p-6 bg-[#050505] border-white/10 hover:border-purple-500/50 transition-colors cursor-pointer group">
@@ -68,7 +128,7 @@ export default function ProjectDetailPage() {
                      <div className="w-8 h-8 rounded bg-purple-500/20 flex items-center justify-center text-purple-400"><Rocket className="w-4 h-4"/></div>
                      <h3 className="text-sm font-heading tracking-widest uppercase text-white group-hover:text-purple-400 transition-colors">Launch Content</h3>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-4">Email sequence generated. 4 TikTok hooks ready. Ad copy drafted.</p>
+                  <p className="text-xs text-muted-foreground mb-4">Email sequence generated. {craftResult?.taglines?.length || 0} taglines ready. Ad copy drafted.</p>
                   <p className="text-xs text-purple-400 font-mono">Open Content Hub &rarr;</p>
                </Card>
             </div>
@@ -118,7 +178,11 @@ export default function ProjectDetailPage() {
                </div>
             </Card>
 
-            <Button className="w-full h-14 bg-white text-black hover:bg-gray-200 uppercase tracking-widest font-bold text-xs"><Download className="w-4 h-4 mr-2"/> Export Blueprint (.PDF)</Button>
+            <Button 
+               onClick={handleExportPDF}
+               className="w-full h-14 bg-white text-black hover:bg-gray-200 uppercase tracking-widest font-bold text-xs">
+               <Download className="w-4 h-4 mr-2"/> Export Brand Kit (.PDF)
+            </Button>
          </div>
       </div>
     </div>
