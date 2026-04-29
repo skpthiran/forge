@@ -1,124 +1,118 @@
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Settings, User, Building, Cpu, CreditCard } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+import { useState, useEffect } from 'react'
+import { supabase } from '../services/supabase'
+import { getUserPlan, PLAN_LIMITS } from '../services/supabase'
+import { Link } from 'react-router-dom'
 
 export default function SettingsPage() {
-  return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700 pb-12">
-      <div className="border-b border-white/10 pb-6">
-        <h1 className="text-3xl font-heading font-medium tracking-tight mb-2">Settings</h1>
-        <p className="text-muted-foreground">Manage your workspace, preferences, and billing.</p>
-      </div>
+  const [user, setUser] = useState<any>(null)
+  const [planInfo, setPlanInfo] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [message, setMessage] = useState('')
 
-      <Tabs defaultValue="profile" className="flex flex-col md:flex-row gap-8">
-        <TabsList className="flex md:flex-col h-auto bg-transparent border-0 justify-start w-full md:w-48 space-y-0 md:space-y-2 space-x-2 md:space-x-0 overflow-x-auto">
-           <TabsTrigger value="profile" className="data-active:bg-white/10 data-active:text-white justify-start py-2 px-4 w-full text-muted-foreground"><User className="w-4 h-4 mr-3" /> Profile</TabsTrigger>
-           <TabsTrigger value="workspace" className="data-active:bg-white/10 data-active:text-white justify-start py-2 px-4 w-full text-muted-foreground"><Building className="w-4 h-4 mr-3" /> Workspace</TabsTrigger>
-           <TabsTrigger value="ai" className="data-active:bg-white/10 data-active:text-white justify-start py-2 px-4 w-full text-muted-foreground"><Cpu className="w-4 h-4 mr-3" /> AI Engine</TabsTrigger>
-           <TabsTrigger value="billing" className="data-active:bg-white/10 data-active:text-white justify-start py-2 px-4 w-full text-muted-foreground"><CreditCard className="w-4 h-4 mr-3" /> Billing</TabsTrigger>
-        </TabsList>
+  useEffect(() => {
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+      const info = await getUserPlan()
+      setPlanInfo(info)
+      setLoading(false)
+    }
+    load()
+  }, [])
 
-        <div className="flex-1">
-          <TabsContent value="profile" className="m-0 animate-in fade-in zoom-in-95 duration-300">
-             <Card className="p-8 bg-black border-white/10 space-y-6">
-                <div>
-                  <h3 className="text-lg font-medium text-white mb-1">Founder Profile</h3>
-                  <p className="text-sm text-muted-foreground">Update your personal details.</p>
-                </div>
-                <div className="space-y-4 max-w-md">
-                   <div className="space-y-2">
-                     <label className="text-xs uppercase tracking-widest text-muted-foreground font-mono">Full Name</label>
-                     <Input defaultValue="Alex Founder" className="bg-white/5 border-white/10" />
-                   </div>
-                   <div className="space-y-2">
-                     <label className="text-xs uppercase tracking-widest text-muted-foreground font-mono">Email Address</label>
-                     <Input defaultValue="alex@founder.co" className="bg-white/5 border-white/10" />
-                   </div>
-                   <Button className="mt-4 bg-white text-black hover:bg-gray-200 uppercase tracking-widest text-xs font-bold px-6">Save Changes</Button>
-                </div>
-             </Card>
-          </TabsContent>
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    window.location.href = '/'
+  }
 
-          <TabsContent value="workspace" className="m-0 animate-in fade-in zoom-in-95 duration-300">
-             <Card className="p-8 bg-black border-white/10 space-y-6">
-                <div>
-                  <h3 className="text-lg font-medium text-white mb-1">Workspace Settings</h3>
-                  <p className="text-sm text-muted-foreground">Manage defaults for all new projects.</p>
-                </div>
-                <div className="space-y-4 max-w-md">
-                   <div className="space-y-2">
-                     <label className="text-xs uppercase tracking-widest text-muted-foreground font-mono">Default Industry</label>
-                     <Input defaultValue="Fashion & Apparel" className="bg-white/5 border-white/10" />
-                   </div>
-                   <div className="space-y-2">
-                     <label className="text-xs uppercase tracking-widest text-muted-foreground font-mono">Default Target Market</label>
-                     <Input defaultValue="United States" className="bg-white/5 border-white/10" />
-                   </div>
-                   <Button className="mt-4 bg-white text-black hover:bg-gray-200 uppercase tracking-widest text-xs font-bold px-6">Save Workspace</Button>
-                </div>
-             </Card>
-          </TabsContent>
+  const handlePasswordReset = async () => {
+    if (!user?.email) return
+    const { error } = await supabase.auth.resetPasswordForEmail(user.email)
+    setMessage(error ? 'Failed to send reset email.' : 'Reset link sent to your email.')
+  }
 
-          <TabsContent value="ai" className="m-0 animate-in fade-in zoom-in-95 duration-300">
-             <Card className="p-8 bg-black border-white/10 space-y-6">
-                <div>
-                  <h3 className="text-lg font-medium text-white mb-1">AI Engine Tuning</h3>
-                  <p className="text-sm text-muted-foreground">Adjust how FORGE generates your blueprints.</p>
-                </div>
-                
-                <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg mb-4">
-                   <p className="text-sm text-primary">Forge Pro accounts get priority access to advanced models.</p>
-                </div>
-                
-                <div className="space-y-4">
-                   <div className="flex items-center justify-between p-4 rounded-md border border-white/5 bg-white/[0.02]">
-                      <div>
-                         <p className="text-sm font-medium text-white">Aggressive Differentiation</p>
-                         <p className="text-xs text-white/50">AI will suggest more polarizing, high-risk/high-reward positioning.</p>
-                      </div>
-                      <div className="w-10 h-5 bg-primary rounded-full relative cursor-pointer shadow-[0_0_10px_rgba(249,115,22,0.3)]">
-                         <div className="w-4 h-4 bg-white rounded-full absolute right-0.5 top-0.5" />
-                      </div>
-                   </div>
-                   <div className="flex items-center justify-between p-4 rounded-md border border-white/5 bg-white/[0.02]">
-                      <div>
-                         <p className="text-sm font-medium text-white">Direct-Response Copy</p>
-                         <p className="text-xs text-white/50">Prioritize conversion over poetic brand storytelling in copy generation.</p>
-                      </div>
-                      <div className="w-10 h-5 bg-white/10 rounded-full relative cursor-pointer">
-                         <div className="w-4 h-4 bg-white/50 rounded-full absolute left-0.5 top-0.5" />
-                      </div>
-                   </div>
-                </div>
-             </Card>
-          </TabsContent>
-
-          <TabsContent value="billing" className="m-0 animate-in fade-in zoom-in-95 duration-300">
-             <Card className="p-8 bg-black border-white/10 space-y-6">
-                <div>
-                  <h3 className="text-lg font-medium text-white mb-1">Current Plan</h3>
-                  <p className="text-sm text-muted-foreground">You are currently on a paid subscription.</p>
-                </div>
-                <div className="p-6 rounded-xl border border-white/10 bg-gradient-to-br from-[#0c0c0c] to-[#050505]">
-                   <div className="flex justify-between items-center mb-6">
-                      <h4 className="text-2xl font-bold tracking-tight text-white font-heading">Forge Pro</h4>
-                      <Badge className="bg-white text-black hover:bg-gray-200">Active</Badge>
-                   </div>
-                   <div className="text-sm text-muted-foreground mb-6">
-                      $99/month. Next billing date: Oct 1, 2024.
-                   </div>
-                   <div className="flex gap-4">
-                      <Button variant="outline" className="border-white/10 bg-white/5 hover:bg-white/10">Manage Subscription</Button>
-                      <Button variant="ghost" className="text-muted-foreground hover:text-white">View Invoices</Button>
-                   </div>
-                </div>
-             </Card>
-          </TabsContent>
-        </div>
-      </Tabs>
+  if (loading) return (
+    <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+      <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
     </div>
-  );
+  )
+
+  return (
+    <div className="min-h-screen bg-[#050505] text-white">
+      <div className="max-w-2xl mx-auto px-6 py-16">
+        <div className="mb-12">
+          <Link to="/dashboard" className="text-xs text-white/40 hover:text-white/60 uppercase tracking-widest transition-colors">
+            ← Dashboard
+          </Link>
+          <h1 className="text-3xl font-bold mt-6">Settings</h1>
+        </div>
+
+        {/* Account */}
+        <section className="mb-8 p-6 rounded-2xl bg-white/[0.02] border border-white/5">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-white/40 mb-6">Account</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs text-white/40 uppercase tracking-widest">Email</label>
+              <p className="text-white mt-1">{user?.email}</p>
+            </div>
+            <div>
+              <label className="text-xs text-white/40 uppercase tracking-widest">User ID</label>
+              <p className="text-white/40 text-xs mt-1 font-mono">{user?.id}</p>
+            </div>
+          </div>
+          <div className="mt-6 flex gap-3">
+            <button
+              onClick={handlePasswordReset}
+              className="px-4 py-2 rounded-lg border border-white/10 hover:border-white/20 text-white/60 hover:text-white text-xs uppercase tracking-widest transition-all"
+            >
+              Reset Password
+            </button>
+          </div>
+          {message && <p className="mt-3 text-xs text-orange-400">{message}</p>}
+        </section>
+
+        {/* Plan */}
+        <section className="mb-8 p-6 rounded-2xl bg-white/[0.02] border border-white/5">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-white/40 mb-6">Plan</h2>
+          {planInfo && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-lg font-bold capitalize">{planInfo.plan} Plan</p>
+                  <p className="text-xs text-white/40 mt-1">
+                    {planInfo.brandCount} of {planInfo.limit === 999999 ? 'unlimited' : planInfo.limit} brand saves used
+                  </p>
+                </div>
+                {planInfo.plan === 'free' && (
+                  <Link
+                    to="/pricing"
+                    className="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-400 text-black text-xs font-bold uppercase tracking-widest transition-all"
+                  >
+                    Upgrade
+                  </Link>
+                )}
+              </div>
+              <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-orange-500 rounded-full"
+                  style={{ width: `${Math.min((planInfo.brandCount / (planInfo.limit === 999999 ? Math.max(planInfo.brandCount, 1) : planInfo.limit)) * 100, 100)}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* Danger Zone */}
+        <section className="p-6 rounded-2xl bg-red-500/[0.03] border border-red-500/10">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-red-400/60 mb-6">Danger Zone</h2>
+          <button
+            onClick={handleSignOut}
+            className="px-4 py-2 rounded-lg border border-red-500/20 hover:border-red-500/40 text-red-400/60 hover:text-red-400 text-xs uppercase tracking-widest transition-all"
+          >
+            Sign Out
+          </button>
+        </section>
+      </div>
+    </div>
+  )
 }

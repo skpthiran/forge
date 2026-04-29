@@ -5,11 +5,12 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Activity, Sparkles, TrendingUp, Search, BrainCircuit, RefreshCw, Zap, ArrowRight, LineChart as ChartIcon, CheckCircle2, AlertCircle, Palette, Target, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { getBrands, Brand } from '../services/supabase';
+import { getBrands, Brand, getUserPlan, PLAN_LIMITS } from '../services/supabase';
 
 export default function DashboardHome() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
+  const [planInfo, setPlanInfo] = useState<{ plan: string; brandCount: number; limit: number } | null>(null);
 
   useEffect(() => {
     async function loadBrands() {
@@ -17,6 +18,9 @@ export default function DashboardHome() {
         const { data, error } = await getBrands();
         if (error) throw error;
         setBrands(data || []);
+        
+        const info = await getUserPlan();
+        setPlanInfo(info);
       } catch (err) {
         console.error('Failed to load brands:', err);
       } finally {
@@ -41,12 +45,26 @@ export default function DashboardHome() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input placeholder="Search projects or signals..." className="pl-9 bg-black/50 border-white/10" />
            </div>
-           <Link to="/demo">
-             <Button className="gap-2 bg-white text-black hover:bg-gray-200 uppercase tracking-widest text-xs font-bold h-10 px-6 custom-glow">
-               <PlusCircle className="w-4 h-4" />
-               New Brand
-             </Button>
-           </Link>
+           {planInfo && planInfo.brandCount >= planInfo.limit ? (
+             <div className="flex items-center gap-3">
+               <span className="text-xs text-white/40">
+                 {planInfo.brandCount}/{planInfo.limit} brands used
+               </span>
+               <Link
+                 to="/pricing"
+                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-orange-500/40 text-orange-400 text-xs font-bold uppercase tracking-widest hover:bg-orange-500/10 transition-all"
+               >
+                 Upgrade to add more →
+               </Link>
+             </div>
+           ) : (
+             <Link to="/demo">
+               <Button className="gap-2 bg-white text-black hover:bg-gray-200 uppercase tracking-widest text-xs font-bold h-10 px-6 custom-glow">
+                 <PlusCircle className="w-4 h-4" />
+                 New Brand
+               </Button>
+             </Link>
+           )}
         </div>
       </div>
 
@@ -168,6 +186,29 @@ export default function DashboardHome() {
            </Link>
         </div>
       </div>
+
+       {planInfo && (
+         <div className="mt-8 p-4 rounded-xl bg-white/[0.02] border border-white/5">
+           <div className="flex justify-between items-center mb-2">
+             <span className="text-xs text-white/40 uppercase tracking-widest">Brand saves</span>
+             <span className="text-xs text-white/60">
+               {planInfo.brandCount} / {planInfo.limit === 999999 ? '∞' : planInfo.limit}
+               <span className="ml-2 text-orange-400 capitalize">{planInfo.plan} plan</span>
+             </span>
+           </div>
+           <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+             <div
+               className="h-full bg-orange-500 rounded-full transition-all"
+               style={{ width: `${Math.min((planInfo.brandCount / (planInfo.limit === 999999 ? planInfo.brandCount || 1 : planInfo.limit)) * 100, 100)}%` }}
+             />
+           </div>
+           {planInfo.plan === 'free' && (
+             <p className="text-xs text-white/30 mt-2">
+               Free plan · <Link to="/pricing" className="text-orange-400 hover:underline">Upgrade for more brands</Link>
+             </p>
+           )}
+         </div>
+       )}
     </div>
   );
 }

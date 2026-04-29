@@ -22,6 +22,36 @@ export type Brand = {
   updated_at: string
 }
 
+export const PLAN_LIMITS: Record<string, number> = {
+  free: 3,
+  starter: 10,
+  builder: 50,
+  pro: 999999,
+}
+
+export async function getUserPlan(): Promise<{ plan: string; brandCount: number; limit: number }> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { plan: 'free', brandCount: 0, limit: 3 }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('plan')
+    .eq('id', user.id)
+    .single()
+
+  const { count } = await supabase
+    .from('brands')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+
+  const plan = profile?.plan || 'free'
+  return {
+    plan,
+    brandCount: count || 0,
+    limit: PLAN_LIMITS[plan] || 3,
+  }
+}
+
 // Auth helpers
 export const signUp = async (email: string, password: string, fullName: string) => {
   const { data, error } = await supabase.auth.signUp({
