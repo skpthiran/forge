@@ -1,7 +1,9 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import Groq from 'groq-sdk'
 
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyCJNu1MGD8tfjwpUZpdypI9xwnJQDWoK-k')
-const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+const groq = new Groq({
+  apiKey: import.meta.env.VITE_GROQ_API_KEY,
+  dangerouslyAllowBrowser: true
+})
 
 // ============================================
 // SIGNAL ENGINE — Market Intelligence
@@ -29,7 +31,7 @@ export const runSignalEngine = async (
   const prompt = `
 You are FORGE Signal Engine — an expert market intelligence AI.
 
-Analyze this business idea and return a structured market report:
+Analyze this business idea and return a structured market report.
 
 Business Idea: ${idea}
 Industry: ${industry}
@@ -37,13 +39,15 @@ Target Audience: ${targetAudience}
 Price Point: ${pricePoint}
 Target Market: ${market}
 
-Return ONLY a valid JSON object with exactly this structure (no markdown, no explanation):
+Return ONLY a valid JSON object with exactly this structure.
+No markdown. No explanation. No code blocks. Raw JSON only.
+
 {
   "demand_score": <number 0-100>,
   "competition_level": "<Low|Medium|High|Very High>",
   "audience_heat": "<Cold|Warming|Rising|Hot|Explosive>",
   "market_gap": "<2-3 sentence description of the primary market opportunity>",
-  "opportunity_window": "<timeframe like '3-6 Months' or '6-12 Months'>",
+  "opportunity_window": "<timeframe like 3-6 Months or 6-12 Months>",
   "insights": [
     { "type": "trend", "text": "<market trend observation>" },
     { "type": "insight", "text": "<audience behavior insight>" },
@@ -63,8 +67,14 @@ Return ONLY a valid JSON object with exactly this structure (no markdown, no exp
 }
 `
 
-  const result = await model.generateContent(prompt)
-  const text = result.response.text()
+  const completion = await groq.chat.completions.create({
+    messages: [{ role: 'user', content: prompt }],
+    model: 'llama-3.3-70b-versatile',
+    temperature: 0.7,
+    max_tokens: 2048,
+  })
+
+  const text = completion.choices[0]?.message?.content || ''
   const cleaned = text.replace(/```json|```/g, '').trim()
   const parsed = JSON.parse(cleaned)
   return { ...parsed, raw_response: text }
@@ -103,7 +113,7 @@ export const runCraftEngine = async (
   const prompt = `
 You are FORGE Craft Engine — an expert brand identity AI.
 
-Create a complete brand identity for this business:
+Create a complete brand identity for this business.
 
 Business Idea: ${idea}
 Industry: ${industry}
@@ -111,7 +121,9 @@ Target Audience: ${targetAudience}
 Price Point: ${pricePoint}
 Market Opportunity: ${marketGap}
 
-Return ONLY a valid JSON object with exactly this structure (no markdown, no explanation):
+Return ONLY a valid JSON object with exactly this structure.
+No markdown. No explanation. No code blocks. Raw JSON only.
+
 {
   "brand_names": ["<name1>", "<name2>", "<name3>", "<name4>", "<name5>"],
   "selected_name": "<best name from the list>",
@@ -125,12 +137,12 @@ Return ONLY a valid JSON object with exactly this structure (no markdown, no exp
   "brand_voice": {
     "tone": "<2-3 adjectives>",
     "vibe": "<2-3 adjectives>",
-    "writing_example": "<2-3 sentences written in the brand voice>"
+    "writing_example": "<2-3 sentences written in brand voice>"
   },
   "color_palette": [
-    { "hex": "#<hex>", "label": "<Primary>" },
-    { "hex": "#<hex>", "label": "<Secondary>" },
-    { "hex": "#<hex>", "label": "<Accent>" }
+    { "hex": "#050505", "label": "Primary" },
+    { "hex": "#1C1C1E", "label": "Secondary" },
+    { "hex": "#<accent hex matching the brand>", "label": "Accent" }
   ],
   "typography": {
     "heading": "<font name and weight>",
@@ -144,8 +156,14 @@ Return ONLY a valid JSON object with exactly this structure (no markdown, no exp
 }
 `
 
-  const result = await model.generateContent(prompt)
-  const text = result.response.text()
+  const completion = await groq.chat.completions.create({
+    messages: [{ role: 'user', content: prompt }],
+    model: 'llama-3.3-70b-versatile',
+    temperature: 0.8,
+    max_tokens: 2048,
+  })
+
+  const text = completion.choices[0]?.message?.content || ''
   const cleaned = text.replace(/```json|```/g, '').trim()
   const parsed = JSON.parse(cleaned)
   return {
