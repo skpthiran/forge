@@ -86,7 +86,7 @@ export default function DashboardHome() {
                </Link>
              </div>
            ) : (
-             <Link to="/demo">
+             <Link to="/new-brand">
                <Button className="gap-2 bg-white text-black hover:bg-gray-200 uppercase tracking-widest text-xs font-bold h-10 px-6 custom-glow">
                  <PlusCircle className="w-4 h-4" />
                  New Brand

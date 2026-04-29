@@ -6,8 +6,11 @@ import { Button } from '@/components/ui/button';
 import { getBrandById, Brand } from '../services/supabase';
 import { exportBrandKitPDF } from '../utils/exportPDF';
 import { useEffect, useState } from 'react';
+import { sendBlueprintEmail } from '../services/gemini';
+import { supabase } from '../services/supabase';
 
 export default function ProjectDetailPage() {
+  const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get('tab') || 'signal';
   const [activeTab, setActiveTab] = useState(defaultTab);
@@ -26,6 +29,18 @@ export default function ProjectDetailPage() {
         // Data structure from select('*, signal_results(*), craft_results(*)')
         setSignalResult(data.signal_results?.[0] || null);
         setCraftResult(data.craft_results?.[0] || null);
+
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user?.email && data.craft_results?.[0]) {
+          sendBlueprintEmail({
+            userEmail: user.email,
+            brandName: data.name || '',
+            industry: data.industry || '',
+            demandScore: data.signal_results?.[0]?.demand_score,
+            competitionLevel: data.signal_results?.[0]?.competition_level,
+            tagline: data.craft_results?.[0]?.selected_tagline,
+          })
+        }
       } catch (err) {
         console.error('Error loading project:', err);
       } finally {
