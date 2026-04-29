@@ -109,6 +109,14 @@ export const getBrands = async () => {
   return { data, error }
 }
 
+export async function deleteBrand(id: string): Promise<{ error: any }> {
+  const { error } = await supabase
+    .from('brands')
+    .delete()
+    .eq('id', id)
+  return { error }
+}
+
 export const getBrandById = async (id: string) => {
   const { data, error } = await supabase
     .from('brands')

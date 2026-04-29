@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import EmptyState from '../components/EmptyState';
+import BrandCard from '../components/BrandCard';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Activity, Sparkles, TrendingUp, Search, BrainCircuit, RefreshCw, Zap, ArrowRight, LineChart as ChartIcon, CheckCircle2, AlertCircle, Palette, Target, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { getBrands, Brand, getUserPlan, PLAN_LIMITS } from '../services/supabase';
+import { getBrands, Brand, getUserPlan, PLAN_LIMITS, deleteBrand } from '../services/supabase';
 
 export default function DashboardHome() {
   const { user } = useAuth();
@@ -47,6 +48,15 @@ export default function DashboardHome() {
     }
     loadBrands();
   }, []);
+
+  const handleDelete = async (id: string) => {
+    const { error } = await deleteBrand(id)
+    if (!error) {
+      setBrands(prev => prev.filter(b => b.id !== id))
+      const info = await getUserPlan()
+      setPlanInfo(info)
+    }
+  }
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700 pb-12">
@@ -104,39 +114,18 @@ export default function DashboardHome() {
          </div>
        )}
 
-       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {loading ? (
-          [1,2,3,4].map(i => (
+          [1,2,3].map(i => (
             <Card key={i} className="h-[280px] bg-white/5 border-white/10 animate-pulse rounded-xl" />
           ))
         ) : brands.length > 0 ? (
           brands.map((brand) => (
-            <Link key={brand.id} to={`/project/${brand.id}`} className="block">
-              <Card className="p-6 bg-[#050505] border-white/5 flex flex-col justify-between h-[280px] hover:bg-white/[0.02] hover:border-white/20 transition-all cursor-pointer group relative overflow-hidden shadow-md">
-                <div className="flex justify-between items-start relative z-10">
-                  <div className="w-12 h-12 rounded-xl border border-white/10 flex items-center justify-center bg-black shadow-inner shadow-white/5 relative overflow-hidden group-hover:border-white/30 transition-colors">
-                    <Sparkles className="w-5 h-5 text-purple-400 group-hover:scale-110 transition-transform relative z-10" />
-                    <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                  <Badge variant="outline" className="text-[9px] uppercase tracking-widest border-white/10">Active</Badge>
-                </div>
-                
-                <div className="relative z-10 mt-auto">
-                    <div className="text-[10px] text-white/40 uppercase tracking-widest mb-1">{brand.industry}</div>
-                    <h3 className="text-2xl font-heading font-medium text-white mb-4 group-hover:text-primary transition-colors truncate">{brand.name}</h3>
-                    
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                         <span className="text-[10px] uppercase font-mono tracking-widest text-muted-foreground">Forging Progress</span>
-                         <span className="text-xs font-mono font-medium text-white/80">Ready</span>
-                      </div>
-                      <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
-                        <div className="bg-gradient-to-r from-primary/50 to-primary h-full rounded-full w-full" />
-                      </div>
-                    </div>
-                </div>
-              </Card>
-            </Link>
+            <BrandCard
+              key={brand.id}
+              brand={brand}
+              onDelete={handleDelete}
+            />
           ))
         ) : (
           <div className="col-span-full">

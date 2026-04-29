@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Circle, ArrowRight, Activity, Palette, Package, FileText, Rocket, Cpu, Download, Sparkles, Loader2, AlertCircle } from 'lucide-react';
@@ -8,7 +8,9 @@ import { exportBrandKitPDF } from '../utils/exportPDF';
 import { useEffect, useState } from 'react';
 
 export default function ProjectDetailPage() {
-  const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const defaultTab = searchParams.get('tab') || 'signal';
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const [brand, setBrand] = useState<Brand | null>(null);
   const [signalResult, setSignalResult] = useState<any>(null);
   const [craftResult, setCraftResult] = useState<any>(null);
@@ -89,10 +91,33 @@ export default function ProjectDetailPage() {
         </div>
       </div>
 
+      <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-2">
+        {[
+          { id: 'signal', label: 'Signal', icon: Activity },
+          { id: 'craft', label: 'Craft', icon: Palette },
+          { id: 'reach', label: 'Reach', icon: Rocket },
+          { id: 'pulse', label: 'Pulse', icon: CheckCircle2 },
+          { id: 'capital', label: 'Capital', icon: Package },
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${
+              activeTab === tab.id
+                ? 'bg-orange-500 text-black shadow-lg shadow-orange-500/20'
+                : 'text-white/40 hover:text-white/60 hover:bg-white/5'
+            }`}
+          >
+            <tab.icon className="w-3.5 h-3.5" />
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
          <div className="col-span-2 space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <Card className="p-6 bg-[#050505] border-white/10 hover:border-primary/50 transition-colors cursor-pointer group">
+               <Card className={`p-6 bg-[#050505] border-white/10 hover:border-primary/50 transition-colors cursor-pointer group ${activeTab === 'craft' ? 'ring-2 ring-primary border-primary/50' : ''}`}>
                   <div className="flex items-center gap-3 mb-4">
                      <div className="w-8 h-8 rounded bg-primary/20 flex items-center justify-center text-primary"><Palette className="w-4 h-4"/></div>
                      <h3 className="text-sm font-heading tracking-widest uppercase text-white group-hover:text-primary transition-colors">Identity & Voice</h3>
@@ -104,7 +129,7 @@ export default function ProjectDetailPage() {
                      )) || <span className="text-[10px] text-white/20">No colors set</span>}
                   </div>
                </Card>
-               <Card className="p-6 bg-[#050505] border-white/10 hover:border-blue-500/50 transition-colors cursor-pointer group">
+               <Card className={`p-6 bg-[#050505] border-white/10 hover:border-blue-500/50 transition-colors cursor-pointer group ${activeTab === 'signal' ? 'ring-2 ring-blue-500 border-blue-500/50' : ''}`}>
                   <div className="flex items-center gap-3 mb-4">
                      <div className="w-8 h-8 rounded bg-blue-500/20 flex items-center justify-center text-blue-400"><Activity className="w-4 h-4"/></div>
                      <h3 className="text-sm font-heading tracking-widest uppercase text-white group-hover:text-blue-400 transition-colors">Market Intel</h3>
@@ -115,7 +140,7 @@ export default function ProjectDetailPage() {
                      <div className="flex justify-between text-xs"><span className="text-white/50">Price Point</span><span className="text-white">{brand.price_point || '—'}</span></div>
                   </div>
                </Card>
-               <Card className="p-6 bg-[#050505] border-white/10 hover:border-green-500/50 transition-colors cursor-pointer group">
+               <Card className={`p-6 bg-[#050505] border-white/10 hover:border-green-500/50 transition-colors cursor-pointer group ${activeTab === 'capital' ? 'ring-2 ring-green-500 border-green-500/50' : ''}`}>
                   <div className="flex items-center gap-3 mb-4">
                      <div className="w-8 h-8 rounded bg-green-500/20 flex items-center justify-center text-green-400"><Package className="w-4 h-4"/></div>
                      <h3 className="text-sm font-heading tracking-widest uppercase text-white group-hover:text-green-400 transition-colors">Product Strategy</h3>
@@ -123,7 +148,7 @@ export default function ProjectDetailPage() {
                   <p className="text-xs text-muted-foreground mb-4">{craftResult?.product_concepts?.length || 0} active SKUs prepared for Drop 01.</p>
                   <p className="text-xs text-green-400 font-mono">View Tech Packs &rarr;</p>
                </Card>
-               <Card className="p-6 bg-[#050505] border-white/10 hover:border-purple-500/50 transition-colors cursor-pointer group">
+               <Card className={`p-6 bg-[#050505] border-white/10 hover:border-purple-500/50 transition-colors cursor-pointer group ${activeTab === 'reach' ? 'ring-2 ring-purple-500 border-purple-500/50' : ''}`}>
                   <div className="flex items-center gap-3 mb-4">
                      <div className="w-8 h-8 rounded bg-purple-500/20 flex items-center justify-center text-purple-400"><Rocket className="w-4 h-4"/></div>
                      <h3 className="text-sm font-heading tracking-widest uppercase text-white group-hover:text-purple-400 transition-colors">Launch Content</h3>
@@ -133,7 +158,7 @@ export default function ProjectDetailPage() {
                </Card>
             </div>
 
-            <Card className="p-0 bg-black border-white/10 overflow-hidden">
+            <Card className={`p-0 bg-black border-white/10 overflow-hidden ${activeTab === 'pulse' ? 'ring-2 ring-orange-500 border-orange-500/50' : ''}`}>
                <div className="p-6 border-b border-white/5 bg-[#050505] flex justify-between items-center">
                   <h3 className="text-sm uppercase tracking-widest text-white font-mono flex items-center gap-2"><CheckCircle2 className="w-4 h-4"/> Launch Checklist</h3>
                   <Badge variant="outline" className="border-white/10 text-[10px]">T-Minus 14 Days</Badge>

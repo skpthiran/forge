@@ -385,3 +385,30 @@ No markdown. No explanation. No code blocks. Raw JSON only.
   const parsed = JSON.parse(cleaned)
   return { ...parsed, raw_response: text }
 }
+
+export async function sendBlueprintEmail(params: {
+  userEmail: string
+  brandName: string
+  industry?: string
+  demandScore?: number
+  competitionLevel?: string
+  tagline?: string
+}) {
+  try {
+    const { data: { session } } = await import('./supabase').then(m => m.supabase.auth.getSession())
+    // fire and forget — don't block the UI
+    fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-blueprint-email`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify(params),
+      }
+    ).catch(console.error)
+  } catch (e) {
+    console.error('Email send failed silently:', e)
+  }
+}
