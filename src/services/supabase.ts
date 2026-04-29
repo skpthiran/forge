@@ -8,6 +8,20 @@ const supabaseAnonKey = keyPart1 + keyPart2 + keyPart3
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+export type Brand = {
+  id: string
+  user_id: string
+  name: string
+  idea: string
+  industry: string | null
+  target_audience: string | null
+  price_point: string | null
+  status: string
+  launch_readiness: number
+  created_at: string
+  updated_at: string
+}
+
 // Auth helpers
 export const signUp = async (email: string, password: string, fullName: string) => {
   const { data, error } = await supabase.auth.signUp({

@@ -14,8 +14,9 @@ export default function DashboardHome() {
   useEffect(() => {
     async function loadBrands() {
       try {
-        const data = await getBrands();
-        setBrands(data);
+        const { data, error } = await getBrands();
+        if (error) throw error;
+        setBrands(data || []);
       } catch (err) {
         console.error('Failed to load brands:', err);
       } finally {
