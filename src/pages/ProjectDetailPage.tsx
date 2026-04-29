@@ -1,4 +1,4 @@
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Circle, ArrowRight, Activity, Palette, Package, FileText, Rocket, Cpu, Download, Sparkles, Loader2, AlertCircle } from 'lucide-react';
@@ -11,6 +11,7 @@ import { supabase } from '../services/supabase';
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get('tab') || 'signal';
   const [activeTab, setActiveTab] = useState(defaultTab);
@@ -143,72 +144,147 @@ export default function ProjectDetailPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
          <div className="col-span-2 space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <Card className={`p-6 bg-[#050505] border-white/10 hover:border-primary/50 transition-colors cursor-pointer group ${activeTab === 'craft' ? 'ring-2 ring-primary border-primary/50' : ''}`}>
-                  <div className="flex items-center gap-3 mb-4">
-                     <div className="w-8 h-8 rounded bg-primary/20 flex items-center justify-center text-primary"><Palette className="w-4 h-4"/></div>
-                     <h3 className="text-sm font-heading tracking-widest uppercase text-white group-hover:text-primary transition-colors">Identity & Voice</h3>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-4">{craftResult?.brand_voice?.tone || 'Tone not yet defined.'} {craftResult?.brand_voice?.vibe || ''}</p>
-                  <div className="flex gap-2">
-                     {craftResult?.color_palette?.map((c: any, i: number) => (
-                       <span key={i} className="w-4 h-4 rounded-full border border-white/10" style={{ backgroundColor: c.hex }} title={c.label} />
-                     )) || <span className="text-[10px] text-white/20">No colors set</span>}
-                  </div>
-               </Card>
-               <Card className={`p-6 bg-[#050505] border-white/10 hover:border-blue-500/50 transition-colors cursor-pointer group ${activeTab === 'signal' ? 'ring-2 ring-blue-500 border-blue-500/50' : ''}`}>
+            {activeTab === 'signal' && (
+              signalResult ? (
+                <Card className={`p-6 bg-[#050505] border-white/10 ring-2 ring-blue-500 border-blue-500/50`}>
                   <div className="flex items-center gap-3 mb-4">
                      <div className="w-8 h-8 rounded bg-blue-500/20 flex items-center justify-center text-blue-400"><Activity className="w-4 h-4"/></div>
-                     <h3 className="text-sm font-heading tracking-widest uppercase text-white group-hover:text-blue-400 transition-colors">Market Intel</h3>
+                     <h3 className="text-sm font-heading tracking-widest uppercase text-white">Market Intel</h3>
                   </div>
-                  <div className="space-y-2">
-                     <div className="flex justify-between text-xs"><span className="text-white/50">Demand</span><span className="text-green-400">{signalResult?.demand_score ? 'High' : '—'}</span></div>
-                     <div className="flex justify-between text-xs"><span className="text-white/50">Competition</span><span className="text-orange-400">{signalResult?.competition_level || '—'}</span></div>
-                     <div className="flex justify-between text-xs"><span className="text-white/50">Price Point</span><span className="text-white">{brand.price_point || '—'}</span></div>
-                  </div>
-               </Card>
-               <Card className={`p-6 bg-[#050505] border-white/10 hover:border-green-500/50 transition-colors cursor-pointer group ${activeTab === 'capital' ? 'ring-2 ring-green-500 border-green-500/50' : ''}`}>
-                  <div className="flex items-center gap-3 mb-4">
-                     <div className="w-8 h-8 rounded bg-green-500/20 flex items-center justify-center text-green-400"><Package className="w-4 h-4"/></div>
-                     <h3 className="text-sm font-heading tracking-widest uppercase text-white group-hover:text-green-400 transition-colors">Product Strategy</h3>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-4">{craftResult?.product_concepts?.length || 0} active SKUs prepared for Drop 01.</p>
-                  <p className="text-xs text-green-400 font-mono">View Tech Packs &rarr;</p>
-               </Card>
-               <Card className={`p-6 bg-[#050505] border-white/10 hover:border-purple-500/50 transition-colors cursor-pointer group ${activeTab === 'reach' ? 'ring-2 ring-purple-500 border-purple-500/50' : ''}`}>
-                  <div className="flex items-center gap-3 mb-4">
-                     <div className="w-8 h-8 rounded bg-purple-500/20 flex items-center justify-center text-purple-400"><Rocket className="w-4 h-4"/></div>
-                     <h3 className="text-sm font-heading tracking-widest uppercase text-white group-hover:text-purple-400 transition-colors">Launch Content</h3>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-4">Email sequence generated. {craftResult?.taglines?.length || 0} taglines ready. Ad copy drafted.</p>
-                  <p className="text-xs text-purple-400 font-mono">Open Content Hub &rarr;</p>
-               </Card>
-            </div>
-
-            <Card className={`p-0 bg-black border-white/10 overflow-hidden ${activeTab === 'pulse' ? 'ring-2 ring-orange-500 border-orange-500/50' : ''}`}>
-               <div className="p-6 border-b border-white/5 bg-[#050505] flex justify-between items-center">
-                  <h3 className="text-sm uppercase tracking-widest text-white font-mono flex items-center gap-2"><CheckCircle2 className="w-4 h-4"/> Launch Checklist</h3>
-                  <Badge variant="outline" className="border-white/10 text-[10px]">T-Minus 14 Days</Badge>
-               </div>
-               <div className="p-2">
-                 {[
-                   { title: "Validate product idea with AI", done: true },
-                   { title: "Generate brand identity and voice", done: true },
-                   { title: "Review generated website copy", done: true },
-                   { title: "Finalize tech packs and order samples", done: false },
-                   { title: "Film TikTok hooks (4 scripts ready)", done: false },
-                   { title: "Setup Shopify and connect domain", done: false },
-                   { title: "Launch pre-order campaign", done: false },
-                 ].map((item, i) => (
-                   <div key={i} className="flex items-center gap-4 p-4 hover:bg-white/[0.02] transition-colors rounded-md group cursor-pointer">
-                     <div className="w-5 h-5 rounded flex items-center justify-center border border-white/20 group-hover:border-white/50 transition-colors data-[state=done]:bg-primary data-[state=done]:border-primary" data-state={item.done ? 'done' : 'open'}>
-                        {item.done && <CheckCircle2 className="w-3 h-3 text-white" />}
+                  <div className="space-y-4">
+                     <div className="grid grid-cols-2 gap-4">
+                        <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                           <div className="text-[10px] uppercase text-muted-foreground mb-1">Demand Score</div>
+                           <div className="text-2xl font-light text-green-400">{signalResult.demand_score}%</div>
+                        </div>
+                        <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                           <div className="text-[10px] uppercase text-muted-foreground mb-1">Competition</div>
+                           <div className="text-2xl font-light text-orange-400">{signalResult.competition_level}</div>
+                        </div>
                      </div>
-                     <span className={`text-sm ${item.done ? 'text-white/40 line-through' : 'text-white/90'}`}>{item.title}</span>
-                   </div>
-                 ))}
-               </div>
-            </Card>
+                     <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                        <div className="text-[10px] uppercase text-muted-foreground mb-2">Market Gap</div>
+                        <p className="text-sm text-white/80 leading-relaxed">{signalResult.market_gap}</p>
+                     </div>
+                  </div>
+                </Card>
+              ) : (
+                <div className="text-center py-16 space-y-4 bg-black border border-dashed border-white/10 rounded-xl">
+                  <p className="text-muted-foreground">No signal analysis yet for this brand.</p>
+                  <Button 
+                    onClick={() => navigate('/signal')}
+                    className="bg-blue-600 hover:bg-blue-700 text-white uppercase tracking-widest text-xs font-bold"
+                  >
+                    Run Signal Engine
+                  </Button>
+                </div>
+              )
+            )}
+
+            {activeTab === 'craft' && (
+              craftResult ? (
+                <div className="space-y-6">
+                  <Card className={`p-6 bg-[#050505] border-white/10 ring-2 ring-primary border-primary/50`}>
+                    <div className="flex items-center gap-3 mb-4">
+                       <div className="w-8 h-8 rounded bg-primary/20 flex items-center justify-center text-primary"><Palette className="w-4 h-4"/></div>
+                       <h3 className="text-sm font-heading tracking-widest uppercase text-white">Identity & Voice</h3>
+                    </div>
+                    <div className="space-y-6">
+                       <div>
+                          <div className="text-[10px] uppercase text-muted-foreground mb-1 font-mono">Selected Name</div>
+                          <div className="text-3xl font-bold text-white">{craftResult.selected_name}</div>
+                       </div>
+                       <div>
+                          <div className="text-[10px] uppercase text-muted-foreground mb-1 font-mono">Core Tagline</div>
+                          <div className="text-xl italic text-primary">"{craftResult.selected_tagline}"</div>
+                       </div>
+                       <div className="grid grid-cols-2 gap-4">
+                          <div className="p-3 rounded bg-white/5 border border-white/10">
+                             <div className="text-[10px] uppercase text-muted-foreground mb-1">Tone</div>
+                             <div className="text-sm">{craftResult.brand_voice?.tone}</div>
+                          </div>
+                          <div className="p-3 rounded bg-white/5 border border-white/10">
+                             <div className="text-[10px] uppercase text-muted-foreground mb-1">Vibe</div>
+                             <div className="text-sm">{craftResult.brand_voice?.vibe}</div>
+                          </div>
+                       </div>
+                       <div>
+                          <div className="text-[10px] uppercase text-muted-foreground mb-2 font-mono">Color Palette</div>
+                          <div className="flex gap-2">
+                             {craftResult.color_palette?.map((c: any, i: number) => (
+                               <div key={i} className="flex flex-col items-center gap-1">
+                                  <div className="w-10 h-10 rounded border border-white/10" style={{ backgroundColor: c.hex }} />
+                                  <span className="text-[8px] font-mono text-white/40">{c.hex}</span>
+                               </div>
+                             ))}
+                          </div>
+                       </div>
+                    </div>
+                  </Card>
+                  
+                  <Card className="p-6 bg-black border-white/10">
+                    <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-4 font-mono">Product Concepts</h3>
+                    <div className="space-y-3">
+                      {craftResult.product_concepts?.map((p: any, i: number) => (
+                        <div key={i} className="p-3 rounded bg-white/[0.02] border border-white/5 flex justify-between items-center">
+                          <div>
+                            <div className="text-sm font-medium text-white">{p.name}</div>
+                            <div className="text-[10px] text-white/40">{p.desc}</div>
+                          </div>
+                          <div className="text-xs font-mono text-primary">{p.price}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                </div>
+              ) : (
+                <div className="text-center py-16 space-y-4 bg-black border border-dashed border-white/10 rounded-xl">
+                  <p className="text-muted-foreground">No brand identity forged yet.</p>
+                  <Button 
+                    onClick={() => navigate('/craft')}
+                    className="bg-primary hover:bg-orange-600 text-white uppercase tracking-widest text-xs font-bold"
+                  >
+                    Run Craft Engine
+                  </Button>
+                </div>
+              )
+            )}
+
+            {activeTab === 'reach' && (
+              <div className="text-center py-16 space-y-4 bg-black border border-dashed border-white/10 rounded-xl">
+                <p className="text-muted-foreground">Run this engine to generate growth and marketing results.</p>
+                <Button 
+                  onClick={() => navigate('/reach')}
+                  className="bg-primary hover:bg-orange-600 text-white uppercase tracking-widest text-xs font-bold"
+                >
+                  Run Reach Engine
+                </Button>
+              </div>
+            )}
+
+            {activeTab === 'pulse' && (
+              <div className="text-center py-16 space-y-4 bg-black border border-dashed border-white/10 rounded-xl">
+                <p className="text-muted-foreground">Run this engine to analyze sentiment and customer strategy.</p>
+                <Button 
+                  onClick={() => navigate('/pulse')}
+                  className="bg-primary hover:bg-orange-600 text-white uppercase tracking-widest text-xs font-bold"
+                >
+                  Run Pulse Engine
+                </Button>
+              </div>
+            )}
+
+            {activeTab === 'capital' && (
+              <div className="text-center py-16 space-y-4 bg-black border border-dashed border-white/10 rounded-xl">
+                <p className="text-muted-foreground">Run this engine to generate financial and ops reports.</p>
+                <Button 
+                  onClick={() => navigate('/capital')}
+                  className="bg-primary hover:bg-orange-600 text-white uppercase tracking-widest text-xs font-bold"
+                >
+                  Run Capital Engine
+                </Button>
+              </div>
+            )}
          </div>
 
          <div className="col-span-1 space-y-6">

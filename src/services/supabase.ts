@@ -22,33 +22,32 @@ export type Brand = {
   updated_at: string
 }
 
-export const PLAN_LIMITS: Record<string, number> = {
-  free: 3,
-  starter: 10,
-  builder: 50,
-  pro: 999999,
+export const PLAN_LIMITS = {
+  free: { brands: 3, label: 'Free' },
+  starter: { brands: 10, label: 'Starter' },
+  builder: { brands: 30, label: 'Builder' },
+  pro: { brands: 999, label: 'Pro' },
 }
 
-export async function getUserPlan(): Promise<{ plan: string; brandCount: number; limit: number }> {
+export const getUserPlan = async () => {
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { plan: 'free', brandCount: 0, limit: 3 }
+  if (!user) return null
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('plan')
+    .select('plan, brands_used')
     .eq('id', user.id)
     .single()
 
-  const { count } = await supabase
-    .from('brands')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', user.id)
-
   const plan = profile?.plan || 'free'
+  const limits = PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS]
+
   return {
     plan,
-    brandCount: count || 0,
-    limit: PLAN_LIMITS[plan] || 3,
+    label: limits.label,
+    brandsUsed: profile?.brands_used || 0,
+    brandsLimit: limits.brands,
+    percentUsed: Math.round(((profile?.brands_used || 0) / limits.brands) * 100),
   }
 }
 

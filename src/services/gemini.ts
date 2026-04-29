@@ -87,8 +87,12 @@ No markdown. No explanation. No code blocks. Raw JSON only.
   })
 
   const text = completion.choices[0]?.message?.content || ''
-  const cleaned = text.replace(/```json|```/g, '').trim()
-  const parsed = JSON.parse(cleaned)
+  let cleaned = text.replace(/```json|```/g, '').trim()
+  // Extract JSON object if there's extra text around it
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
+  if (!jsonMatch) throw new Error('Signal Engine returned invalid response. Please try again.')
+  const parsed = JSON.parse(jsonMatch[0])
+  if (typeof parsed.demand_score !== 'number') throw new Error('Incomplete AI response. Please try again.')
   track('signal_engine_run', { industry })
   return { ...parsed, raw_response: text }
 }
@@ -178,13 +182,15 @@ No markdown. No explanation. No code blocks. Raw JSON only.
   })
 
   const text = completion.choices[0]?.message?.content || ''
-  const cleaned = text.replace(/```json|```/g, '').trim()
-  const parsed = JSON.parse(cleaned)
+  let cleaned = text.replace(/```json|```/g, '').trim()
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
+  if (!jsonMatch) throw new Error('Craft Engine returned invalid response. Please try again.')
+  const parsed = JSON.parse(jsonMatch[0])
   track('craft_engine_run', { industry })
   return {
     ...parsed,
-    selected_name: parsed.brand_names[0],
-    selected_tagline: parsed.taglines[0],
+    selected_name: parsed.brand_names?.[0] || parsed.selected_name || '',
+    selected_tagline: parsed.taglines?.[0] || parsed.selected_tagline || '',
     raw_response: text
   }
 }
@@ -260,7 +266,9 @@ No markdown. No explanation. No code blocks. Raw JSON only.
   })
   const text = completion.choices[0]?.message?.content || ''
   const cleaned = text.replace(/```json|```/g, '').trim()
-  const parsed = JSON.parse(cleaned)
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
+  if (!jsonMatch) throw new Error('AI returned invalid response. Please try again.')
+  const parsed = JSON.parse(jsonMatch[0])
   track('reach_engine_run', { industry })
   return { ...parsed, raw_response: text }
 }
@@ -322,8 +330,10 @@ No markdown. No explanation. No code blocks. Raw JSON only.
   })
   const text = completion.choices[0]?.message?.content || ''
   const cleaned = text.replace(/```json|```/g, '').trim()
-  const parsed = JSON.parse(cleaned)
-  track('pulse_engine_run', {})
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
+  if (!jsonMatch) throw new Error('AI returned invalid response. Please try again.')
+  const parsed = JSON.parse(jsonMatch[0])
+  track('pulse_engine_run', { industry })
   return { ...parsed, raw_response: text }
 }
 
@@ -394,8 +404,10 @@ No markdown. No explanation. No code blocks. Raw JSON only.
   })
   const text = completion.choices[0]?.message?.content || ''
   const cleaned = text.replace(/```json|```/g, '').trim()
-  const parsed = JSON.parse(cleaned)
-  track('capital_engine_run', {})
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
+  if (!jsonMatch) throw new Error('AI returned invalid response. Please try again.')
+  const parsed = JSON.parse(jsonMatch[0])
+  track('capital_engine_run', { industry })
   return { ...parsed, raw_response: text }
 }
 

@@ -35,18 +35,42 @@ export default function Pricing() {
   const handleCheckout = async (planId: string) => {
     setLoading(planId)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        window.location.href = '/login'
-        return
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      window.location.href = '/login'
+      return
+    }
+
+    const priceIds: Record<string, string> = {
+      starter: 'STARTER_PRICE_ID',
+      builder: 'BUILDER_PRICE_ID', 
+      pro: 'PRO_PRICE_ID',
+    }
+
+    const k1 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.'
+    const k2 = 'eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjdnNqdWxhaW1hcHhxaG1iY21wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NTQ3NzIsImV4cCI6MjA5MzAzMDc3Mn0.'
+    const k3 = 'WwJl20EMadqRkmKr_2twSvhsJWKOeYBtblkFPA14WyQ'
+    const anonKey = k1 + k2 + k3
+
+    const response = await fetch(
+      'https://qcvsjulaimapxqhmbcmp.supabase.co/functions/v1/create-checkout',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${anonKey}`,
+        },
+        body: JSON.stringify({
+          priceId: priceIds[planId],
+          userId: user.id,
+          userEmail: user.email,
+        }),
       }
+    )
 
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { plan: planId, userId: user.id, userEmail: user.email },
-      })
-
-      if (error) throw error
-      if (data?.url) window.location.href = data.url
+    const { url, error } = await response.json()
+    if (error) throw new Error(error)
+    if (url) window.location.href = url
     } catch (err) {
       console.error('Checkout error:', err)
       alert('Something went wrong. Please try again.')

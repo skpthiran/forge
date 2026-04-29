@@ -9,15 +9,24 @@ import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Activity, Sparkles, TrendingUp, Search, BrainCircuit, RefreshCw, Zap, ArrowRight, LineChart as ChartIcon, CheckCircle2, AlertCircle, Palette, Target, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { getBrands, Brand, getUserPlan, PLAN_LIMITS, deleteBrand } from '../services/supabase';
+import { toast } from 'sonner';
 
 export default function DashboardHome() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
-  const [planInfo, setPlanInfo] = useState<{ plan: string; brandCount: number; limit: number } | null>(null);
+  const [planInfo, setPlanInfo] = useState<any>(null);
   const [isFirstTime, setIsFirstTime] = useState(false);
   const [showWelcomeBanner, setShowWelcomeBanner] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('upgraded') === 'true') {
+      toast.success('Plan upgraded successfully! Welcome to your new plan.')
+      window.history.replaceState({}, '', '/dashboard')
+    }
+  }, [])
 
   useEffect(() => {
     async function loadBrands() {
@@ -73,10 +82,10 @@ export default function DashboardHome() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input placeholder="Search projects or signals..." className="pl-9 bg-black/50 border-white/10" />
            </div>
-           {planInfo && planInfo.brandCount >= planInfo.limit ? (
+           {planInfo && planInfo.brandsUsed >= planInfo.brandsLimit ? (
              <div className="flex items-center gap-3">
                <span className="text-xs text-white/40">
-                 {planInfo.brandCount}/{planInfo.limit} brands used
+                 {planInfo.brandsUsed}/{planInfo.brandsLimit} brands used
                </span>
                <Link
                  to="/pricing"
@@ -185,14 +194,14 @@ export default function DashboardHome() {
            <div className="flex justify-between items-center mb-2">
              <span className="text-xs text-white/40 uppercase tracking-widest">Brand saves</span>
              <span className="text-xs text-white/60">
-               {planInfo.brandCount} / {planInfo.limit === 999999 ? '∞' : planInfo.limit}
+               {planInfo.brandsUsed} / {planInfo.brandsLimit === 999 ? '∞' : planInfo.brandsLimit}
                <span className="ml-2 text-orange-400 capitalize">{planInfo.plan} plan</span>
              </span>
            </div>
            <div className="h-1 bg-white/5 rounded-full overflow-hidden">
              <div
                className="h-full bg-orange-500 rounded-full transition-all"
-               style={{ width: `${Math.min((planInfo.brandCount / (planInfo.limit === 999999 ? planInfo.brandCount || 1 : planInfo.limit)) * 100, 100)}%` }}
+               style={{ width: `${planInfo.percentUsed}%` }}
              />
            </div>
            {planInfo.plan === 'free' && (
