@@ -42,9 +42,9 @@ export default function Pricing() {
     }
 
     const priceIds: Record<string, string> = {
-      starter: 'STARTER_PRICE_ID',
-      builder: 'BUILDER_PRICE_ID', 
-      pro: 'PRO_PRICE_ID',
+      starter: 'price_1TRXcEKj0cl4OuvZvPQDAvKR',
+      builder: 'price_1TRXd8Kj0cl4OuvZMFNPBDKk',
+      pro: 'price_1TRXdmKj0cl4OuvZV8A0FpIh',
     }
 
     const k1 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.'
