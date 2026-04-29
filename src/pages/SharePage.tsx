@@ -19,6 +19,44 @@ export default function SharePage() {
     load()
   }, [id])
 
+  useEffect(() => {
+    if (!brand) return
+    const signal = brand.signal_results?.[0]
+    const craft = brand.craft_results?.[0]
+    const title = `${brand.name} — Brand Blueprint | FORGE`
+    const desc = craft?.selected_tagline
+      ? `"${craft.selected_tagline}" · ${brand.industry || 'Brand'} · ${signal?.demand_score ? `${signal.demand_score}% demand score` : 'Built with FORGE AI'}`
+      : `${brand.idea?.slice(0, 120) || 'A brand built with FORGE AI'}`
+
+    document.title = title
+
+    const setMeta = (property: string, content: string) => {
+      let el = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement
+        || document.querySelector(`meta[name="${property}"]`) as HTMLMetaElement
+      if (!el) {
+        el = document.createElement('meta')
+        el.setAttribute(property.startsWith('og:') || property.startsWith('twitter:') ? 'property' : 'name', property)
+        document.head.appendChild(el)
+      }
+      el.setAttribute('content', content)
+    }
+
+    const url = window.location.href
+    setMeta('og:title', title)
+    setMeta('og:description', desc)
+    setMeta('og:url', url)
+    setMeta('og:type', 'website')
+    setMeta('og:site_name', 'FORGE AI')
+    setMeta('twitter:card', 'summary')
+    setMeta('twitter:title', title)
+    setMeta('twitter:description', desc)
+    setMeta('description', desc)
+
+    return () => {
+      document.title = 'FORGE AI'
+    }
+  }, [brand])
+
   if (loading) return (
     <div className="min-h-screen bg-[#050505] flex items-center justify-center">
       <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
