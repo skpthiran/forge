@@ -1,69 +1,114 @@
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { CheckCircle2 } from 'lucide-react';
+import { useState } from 'react'
+import { supabase } from '../services/supabase'
 
-export default function PricingPage() {
-  const plans = [
-    {
-      name: "Starter",
-      price: "$19",
-      desc: "For validating ideas and creating brand launch kits.",
-      features: ["1 Brand project", "Basic Market reports", "Export options"],
-      recommended: false
-    },
-    {
-      name: "Builder",
-      price: "$49",
-      desc: "For serious founders building multiple brand projects.",
-      features: ["3 Brand projects", "AI brand identity generation", "Product strategy", "Website copy", "Priority AI"],
-      recommended: true
-    },
-    {
-      name: "Forge Pro",
-      price: "$99",
-      desc: "For agencies, ecommerce operators, and power users.",
-      features: ["Unlimited projects", "Growth campaigns", "Finance tools", "Dedicated Support"],
-      recommended: false
+const plans = [
+  {
+    id: 'starter',
+    name: 'Starter',
+    price: '$19',
+    period: '/month',
+    features: ['10 brand saves', 'Signal Engine', 'Craft Engine', 'PDF export'],
+    cta: 'Get Starter',
+  },
+  {
+    id: 'builder',
+    name: 'Builder',
+    price: '$49',
+    period: '/month',
+    features: ['50 brand saves', 'Everything in Starter', 'Priority AI', 'Team sharing'],
+    cta: 'Get Builder',
+    popular: true,
+  },
+  {
+    id: 'pro',
+    name: 'Pro',
+    price: '$99',
+    period: '/month',
+    features: ['Unlimited brands', 'Everything in Builder', 'White-label export', 'API access'],
+    cta: 'Get Pro',
+  },
+]
+
+export default function Pricing() {
+  const [loading, setLoading] = useState<string | null>(null)
+
+  const handleCheckout = async (planId: string) => {
+    setLoading(planId)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        window.location.href = '/login'
+        return
+      }
+
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { plan: planId, userId: user.id, userEmail: user.email },
+      })
+
+      if (error) throw error
+      if (data?.url) window.location.href = data.url
+    } catch (err) {
+      console.error('Checkout error:', err)
+      alert('Something went wrong. Please try again.')
+    } finally {
+      setLoading(null)
     }
-  ];
+  }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in duration-700 pb-20">
-      <div className="text-center">
-        <h1 className="text-4xl font-heading font-medium tracking-tight mb-4">Pricing</h1>
-        <p className="text-muted-foreground text-lg">Choose the intelligence level for your brand.</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8">
-        {plans.map((plan) => (
-          <Card key={plan.name} className={`p-8 bg-black/50 border flex flex-col ${plan.recommended ? 'border-primary relative shadow-[0_0_30px_rgba(249,115,22,0.15)]' : 'border-white/10'}`}>
-            {plan.recommended && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-3 py-1 bg-primary text-primary-foreground text-[10px] uppercase tracking-widest rounded-full font-bold">
-                Most Popular
+    <div className="min-h-screen bg-black text-white py-20 px-6">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-16">
+          <h1 className="text-5xl font-bold mb-4">Choose Your Plan</h1>
+          <p className="text-zinc-400 text-lg">Scale your brand building with FORGE</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {plans.map((plan) => (
+            <div
+              key={plan.id}
+              className={`rounded-2xl border p-8 flex flex-col gap-6 ${
+                plan.popular
+                  ? 'border-orange-500 bg-zinc-900'
+                  : 'border-zinc-800 bg-zinc-950'
+              }`}
+            >
+              {plan.popular && (
+                <span className="text-xs font-bold text-orange-400 uppercase tracking-widest">
+                  Most Popular
+                </span>
+              )}
+              <div>
+                <h2 className="text-2xl font-bold">{plan.name}</h2>
+                <div className="mt-2">
+                  <span className="text-4xl font-bold">{plan.price}</span>
+                  <span className="text-zinc-400">{plan.period}</span>
+                </div>
               </div>
-            )}
-            <h3 className="text-2xl font-medium mb-2">{plan.name}</h3>
-            <div className="flex items-baseline gap-1 mb-4">
-               <span className="text-4xl font-light">{plan.price}</span>
-               <span className="text-muted-foreground">/month</span>
+              <ul className="flex flex-col gap-3 flex-1">
+                {plan.features.map((f) => (
+                  <li key={f} className="flex items-center gap-2 text-zinc-300 text-sm">
+                    <span className="text-orange-400">✓</span> {f}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => handleCheckout(plan.id)}
+                disabled={loading === plan.id}
+                className={`w-full py-3 rounded-xl font-bold transition-all ${
+                  plan.popular
+                    ? 'bg-orange-500 hover:bg-orange-400 text-black'
+                    : 'bg-zinc-800 hover:bg-zinc-700 text-white'
+                }`}
+              >
+                {loading === plan.id ? 'Loading...' : plan.cta}
+              </button>
             </div>
-            <p className="text-sm text-muted-foreground mb-8 min-h-[40px]">{plan.desc}</p>
-            
-            <ul className="space-y-4 mb-8 flex-1">
-              {plan.features.map((feature, i) => (
-                <li key={i} className="flex gap-3 text-sm">
-                  <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
-                  {feature}
-                </li>
-              ))}
-            </ul>
-
-            <Button className={plan.recommended ? "bg-white text-black hover:bg-gray-200" : "bg-white/5 hover:bg-white/10"}>
-              {plan.recommended ? "Start Building" : "Select Plan"}
-            </Button>
-          </Card>
-        ))}
+          ))}
+        </div>
+        <p className="text-center text-zinc-500 text-sm mt-12">
+          Free plan includes 3 brand saves. Upgrade anytime. Cancel anytime.
+        </p>
       </div>
     </div>
-  );
+  )
 }

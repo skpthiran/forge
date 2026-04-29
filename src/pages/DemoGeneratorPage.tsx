@@ -9,7 +9,7 @@ import { BrainCircuit, Sparkles, Target, Palette, Zap, FileText, Rocket, CheckCi
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { runSignalEngine, runCraftEngine, SignalResult, CraftResult } from '../services/gemini';
-import { createBrand, saveSignalResult, saveCraftResult } from '../services/supabase';
+import { supabase } from '../services/supabase';
 
 export default function DemoGeneratorPage() {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -58,22 +58,9 @@ export default function DemoGeneratorPage() {
       const craft = await runCraftEngine(idea, industry, targetAudience, pricePoint, signal.market_gap);
       setCraftResult(craft);
 
-      // Step 5: Save to Database
-      setLoadingStep(4);
-      const { data: brand, error: brandError } = await createBrand({
-        name: craft.selected_name,
-        idea,
-        industry,
-        target_audience: targetAudience,
-        price_point: pricePoint
-      });
-
-      if (brandError) throw brandError;
-
-      await saveSignalResult(brand.id, signal);
-      await saveCraftResult(brand.id, craft);
-
+      // Step 5: Ready to finalize
       setLoadingStep(5);
+      await new Promise(r => setTimeout(r, 800));
       await new Promise(r => setTimeout(r, 800));
       
       setIsGenerating(false);
@@ -83,6 +70,53 @@ export default function DemoGeneratorPage() {
       console.error(err);
       toast.error(err.message || 'Failed to forge brand. Please try again.');
       setIsGenerating(false);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { 
+        toast.error('Please sign in first'); 
+        navigate('/login');
+        return 
+      }
+
+      // Check free plan limit
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('plan, brands_saved')
+        .eq('id', user.id)
+        .single()
+
+      if (profile?.plan === 'free' && (profile?.brands_saved || 0) >= 3) {
+        toast.error('Free plan limit reached (3 brands). Please upgrade.');
+        navigate('/pricing');
+        return
+      }
+
+      // Save the brand
+      const { error } = await supabase.from('brands').insert({
+        user_id: user.id,
+        brand_name: craftResult?.selected_name || 'Untitled Brand',
+        tagline: craftResult?.selected_tagline || '',
+        signal_data: signalResult,
+        craft_data: craftResult,
+      })
+
+      if (error) throw error
+
+      // Increment brands_saved counter
+      await supabase
+        .from('profiles')
+        .update({ brands_saved: (profile?.brands_saved || 0) + 1 })
+        .eq('id', user.id)
+
+      toast.success('Brand saved! View it in your Command Center.');
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('Save error:', err)
+      toast.error('Failed to save. Please try again.')
     }
   };
 
@@ -199,7 +233,7 @@ export default function DemoGeneratorPage() {
              <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                <Button variant="outline" onClick={() => setIsDone(false)} className="border-white/10 hover:bg-white/5 order-3 md:order-1 flex-1 md:flex-none">Start Over</Button>
                <Button variant="outline" className="border-white/10 hover:bg-white/5 order-2 md:order-2 flex-1 md:flex-none" onClick={() => navigate('/dashboard')}><Download className="w-4 h-4 mr-2"/> Go to Dashboard</Button>
-               <Button className="bg-primary hover:bg-orange-600 text-white order-1 md:order-3 w-full md:w-auto" onClick={() => navigate('/dashboard')}><Save className="w-4 h-4 mr-2"/> Finalize & Save</Button>
+               <Button className="bg-primary hover:bg-orange-600 text-white order-1 md:order-3 w-full md:w-auto" onClick={handleSave}><Save className="w-4 h-4 mr-2"/> Finalize & Save</Button>
              </div>
           </div>
 
