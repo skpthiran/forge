@@ -14,6 +14,7 @@ import { toast } from 'sonner'
 export default function DemoGeneratorPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDone, setIsDone] = useState(false);
+  const [showReveal, setShowReveal] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const navigate = useNavigate();
 
@@ -64,7 +65,7 @@ export default function DemoGeneratorPage() {
       await new Promise(r => setTimeout(r, 800));
       
       setIsGenerating(false);
-      setIsDone(true);
+      setShowReveal(true);
       toast.success('Brand blueprint forged successfully!');
     } catch (err: any) {
       console.error(err);
@@ -72,6 +73,12 @@ export default function DemoGeneratorPage() {
       setIsGenerating(false);
     }
   };
+
+  const handleShare = () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url);
+    toast.success('Share link copied to clipboard');
+  }
 
   const [isSaving, setIsSaving] = useState(false)
 
@@ -140,94 +147,140 @@ export default function DemoGeneratorPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-700 pb-12">
       
-      {!isDone && !isGenerating && (
-        <motion.div exit={{ opacity: 0, scale: 0.95 }} className="pt-12 pb-24">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-heading font-medium tracking-tight mb-4">Forge Your Brand</h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto">Describe your raw business idea. The AI will generate a complete brand blueprint, market analysis, and product strategy.</p>
+      {!isDone && !isGenerating && !showReveal && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95 }} 
+          className="pt-12 pb-24"
+        >
+          <div className="text-center mb-16">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="inline-block px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] uppercase tracking-[0.2em] mb-6"
+            >
+              Initiation Sequence
+            </motion.div>
+            <h1 className="text-5xl md:text-7xl font-heading font-medium tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/40">
+              Forge Your Brand
+            </h1>
+            <p className="text-zinc-400 max-w-xl mx-auto text-lg leading-relaxed">
+              We don't just build businesses. We forge emotional infrastructure. 
+              Describe the soul of your idea below.
+            </p>
           </div>
 
-          <Card className="p-8 border-white/10 bg-black/50 backdrop-blur-md shadow-2xl relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-            <form onSubmit={handleGenerate} className="space-y-6 relative z-10">
-              <div className="space-y-2">
-                <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">The Raw Idea</label>
-                <Textarea 
-                  value={idea}
-                  onChange={(e) => setIdea(e.target.value)}
-                  placeholder="I want to start a premium gym clothing brand for young men..." 
-                  className="min-h-[120px] bg-white/5 border-white/10 text-lg focus-visible:ring-primary/50"
-                  required
-                />
+          <div className="max-w-3xl mx-auto">
+            <form onSubmit={handleGenerate} className="space-y-12">
+              {/* The Spark */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary text-xs font-mono">01</div>
+                  <h2 className="text-xl font-heading font-light tracking-wide text-white/90">The Spark</h2>
+                </div>
+                <div className="relative group">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-orange-500/20 rounded-2xl blur opacity-25 group-focus-within:opacity-100 transition duration-1000"></div>
+                  <Textarea 
+                    value={idea}
+                    onChange={(e) => setIdea(e.target.value)}
+                    placeholder="I want to start a premium gym clothing brand..." 
+                    className="min-h-[160px] bg-zinc-950/80 border-white/5 text-xl font-light placeholder:text-zinc-700 focus-visible:ring-primary/30 relative z-10 rounded-2xl p-6"
+                    required
+                  />
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <div className="space-y-2">
-                   <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Industry</label>
-                   <Input value={industry} onChange={(e) => setIndustry(e.target.value)} className="bg-white/5 border-white/10" required />
-                 </div>
-                 <div className="space-y-2">
-                   <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Target Audience</label>
-                   <Input value={targetAudience} onChange={(e) => setTargetAudience(e.target.value)} className="bg-white/5 border-white/10" required />
-                 </div>
-                 <div className="space-y-2">
-                   <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Price Point</label>
-                   <Input value={pricePoint} onChange={(e) => setPricePoint(e.target.value)} className="bg-white/5 border-white/10" required />
-                 </div>
-                 <div className="space-y-2">
-                   <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Target Market</label>
-                   <select 
-                    value={market} 
-                    onChange={(e) => setMarket(e.target.value)}
-                    className="w-full h-10 px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                   >
-                     <option value="Global" className="bg-black text-white">Global</option>
-                     <option value="US" className="bg-black text-white">United States</option>
-                     <option value="EU" className="bg-black text-white">European Union</option>
-                   </select>
-                 </div>
+              {/* The Foundation */}
+              <div className="space-y-6 pt-6 border-t border-white/5">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center text-zinc-500 text-xs font-mono">02</div>
+                  <h2 className="text-xl font-heading font-light tracking-wide text-white/90">The Foundation</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                   <div className="space-y-2">
+                     <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Industry Sector</label>
+                     <Input value={industry} onChange={(e) => setIndustry(e.target.value)} className="bg-transparent border-0 border-b border-white/10 rounded-none px-0 h-10 focus-visible:ring-0 focus-visible:border-primary transition-all text-lg" required />
+                   </div>
+                   <div className="space-y-2">
+                     <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Target Audience</label>
+                     <Input value={targetAudience} onChange={(e) => setTargetAudience(e.target.value)} className="bg-transparent border-0 border-b border-white/10 rounded-none px-0 h-10 focus-visible:ring-0 focus-visible:border-primary transition-all text-lg" required />
+                   </div>
+                   <div className="space-y-2">
+                     <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Price Positioning</label>
+                     <Input value={pricePoint} onChange={(e) => setPricePoint(e.target.value)} className="bg-transparent border-0 border-b border-white/10 rounded-none px-0 h-10 focus-visible:ring-0 focus-visible:border-primary transition-all text-lg" required />
+                   </div>
+                   <div className="space-y-2">
+                     <label className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Geographic Focus</label>
+                     <select 
+                      value={market} 
+                      onChange={(e) => setMarket(e.target.value)}
+                      className="w-full bg-transparent border-0 border-b border-white/10 rounded-none px-0 h-10 focus:outline-none focus:border-primary transition-all text-lg appearance-none cursor-pointer"
+                     >
+                       <option value="Global" className="bg-zinc-950 text-white">Global Market</option>
+                       <option value="US" className="bg-zinc-950 text-white">United States</option>
+                       <option value="EU" className="bg-zinc-950 text-white">European Union</option>
+                     </select>
+                   </div>
+                </div>
               </div>
 
-              <div className="pt-6">
+              <div className="pt-12">
                 <Button 
                   type="submit" 
-                  className="w-full h-14 bg-white text-black hover:bg-gray-200 uppercase tracking-widest font-bold text-sm custom-glow"
+                  className="w-full h-16 bg-white text-black hover:bg-zinc-200 uppercase tracking-[0.3em] font-bold text-xs rounded-2xl shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  <BrainCircuit className="w-5 h-5 mr-2" /> Forge Brand
+                  Initiate Forging Process
                 </Button>
+                <p className="text-center text-zinc-600 text-[10px] uppercase tracking-widest mt-6 font-mono">
+                  FORGE BRAND OS v1.0 — Secure Environment
+                </p>
               </div>
             </form>
-          </Card>
+          </div>
         </motion.div>
       )}
 
       {isGenerating && (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] animate-in fade-in duration-500">
-           <div className="w-32 h-32 relative mb-12">
-              <div className="absolute inset-0 border-t-2 border-primary rounded-full animate-spin [animation-duration:3s]" />
-              <div className="absolute inset-2 border-r-2 border-white/50 rounded-full animate-spin [animation-duration:2s]" />
-              <div className="absolute inset-4 border-b-2 border-blue-500/50 rounded-full animate-spin [animation-duration:1s]" />
+        <div className="flex flex-col items-center justify-center min-h-[70vh] animate-in fade-in duration-500">
+           <div className="relative mb-16">
+              <motion.div 
+                animate={{ rotate: 360 }} 
+                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                className="w-48 h-48 border-t border-b border-primary/20 rounded-full"
+              />
+              <motion.div 
+                animate={{ rotate: -360 }} 
+                transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-4 border-l border-r border-white/10 rounded-full"
+              />
               <div className="absolute inset-0 flex items-center justify-center">
-                 <BrainCircuit className="w-8 h-8 text-white animate-pulse" />
+                 <BrainCircuit className="w-12 h-12 text-white animate-pulse" />
               </div>
+              <motion.div 
+                animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.5, 0.2] }}
+                transition={{ duration: 4, repeat: Infinity }}
+                className="absolute inset-0 bg-primary/10 rounded-full blur-3xl"
+              />
            </div>
            
-           <div className="w-64">
+           <div className="w-80 text-center">
               <AnimatePresence mode="wait">
                  <motion.div
                    key={loadingStep}
                    initial={{ opacity: 0, y: 10 }}
                    animate={{ opacity: 1, y: 0 }}
                    exit={{ opacity: 0, y: -10 }}
-                   className="text-center font-mono text-sm tracking-widest uppercase text-primary mb-6 h-8"
+                   className="font-mono text-xs tracking-[0.4em] uppercase text-primary mb-8"
                  >
                    {loadingSteps[loadingStep]}
                  </motion.div>
               </AnimatePresence>
               
-              <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden">
+              <div className="h-[2px] w-full bg-white/5 rounded-full overflow-hidden">
                  <motion.div 
-                   className="h-full bg-gradient-to-r from-primary to-orange-400"
+                   className="h-full bg-primary"
                    initial={{ width: "0%" }}
                    animate={{ width: `${((loadingStep + 1) / loadingSteps.length) * 100}%` }}
                    transition={{ duration: 0.5 }}
@@ -235,6 +288,71 @@ export default function DemoGeneratorPage() {
               </div>
            </div>
         </div>
+      )}
+
+      {showReveal && craftResult && (
+        <motion.div 
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center p-6"
+        >
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/10 rounded-full blur-[120px]" />
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 1 }}
+            className="text-center relative z-10"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.8 }}
+              className="text-[10px] font-mono uppercase tracking-[0.5em] text-primary mb-8"
+            >
+              Identity Forged
+            </motion.div>
+            
+            <h1 className="text-6xl md:text-9xl font-heading font-medium tracking-tighter mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/40">
+              {craftResult.selected_name}
+            </h1>
+            
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.5, duration: 1 }}
+              className="text-xl md:text-2xl text-zinc-400 font-light tracking-wide max-w-2xl mx-auto italic"
+            >
+              "{craftResult.selected_tagline}"
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 2.5 }}
+              className="mt-20 flex flex-col sm:flex-row items-center justify-center gap-6"
+            >
+              <Button 
+                onClick={() => {
+                  setShowReveal(false);
+                  setIsDone(true);
+                }}
+                className="bg-white text-black hover:bg-zinc-200 px-10 h-14 rounded-2xl font-bold uppercase tracking-widest text-xs"
+              >
+                Reveal Full Blueprint
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={handleShare}
+                className="border-white/10 hover:bg-white/5 px-10 h-14 rounded-2xl text-xs uppercase tracking-widest"
+              >
+                Share Identity
+              </Button>
+            </motion.div>
+          </motion.div>
+        </motion.div>
       )}
 
       {isDone && craftResult && signalResult && (
@@ -248,9 +366,9 @@ export default function DemoGeneratorPage() {
                 <p className="text-muted-foreground">{craftResult.selected_tagline}</p>
              </div>
              <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-               <Button variant="outline" onClick={() => setIsDone(false)} className="border-white/10 hover:bg-white/5 order-3 md:order-1 flex-1 md:flex-none">Start Over</Button>
-               <Button variant="outline" className="border-white/10 hover:bg-white/5 order-2 md:order-2 flex-1 md:flex-none" onClick={() => navigate('/dashboard')}><Download className="w-4 h-4 mr-2"/> Go to Dashboard</Button>
-               <Button className="bg-primary hover:bg-orange-600 text-white order-1 md:order-3 w-full md:w-auto" onClick={handleSave}><Save className="w-4 h-4 mr-2"/> Finalize & Save</Button>
+               <Button variant="outline" onClick={handleShare} className="border-white/10 hover:bg-white/5 order-3 md:order-1 flex-1 md:flex-none">Share Blueprint</Button>
+               <Button variant="outline" className="border-white/10 hover:bg-white/5 order-2 md:order-2 flex-1 md:flex-none" onClick={() => navigate('/dashboard')}><Download className="w-4 h-4 mr-2"/> To Dashboard</Button>
+               <Button className="bg-primary hover:bg-orange-600 text-white order-1 md:order-3 w-full md:w-auto px-6" onClick={handleSave}><Save className="w-4 h-4 mr-2"/> Finalize & Save</Button>
              </div>
           </div>
 
