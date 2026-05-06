@@ -49,11 +49,35 @@ export const runSignalEngine = async (
   pricePoint: string,
   market: string = 'Global'
 ): Promise<SignalResult> => {
+  const prompt = `You are a market intelligence analyst. Analyze the following business idea and return a JSON object only — no markdown, no explanation.
+
+Business Idea: ${idea}
+Industry: ${industry}
+Target Audience: ${targetAudience}
+Price Point: ${pricePoint}
+Market: ${market}
+
+Return this exact JSON shape:
+{
+  "demand_score": <integer 0-100>,
+  "competition_level": "<Low|Medium|High>",
+  "audience_heat": "<Cold|Warm|Hot>",
+  "market_gap": "<one sentence describing the gap>",
+  "opportunity_window": "<short timeframe description>",
+  "insights": [{ "type": "trend|insight|alert", "text": "<string>" }],
+  "competitor_map": [{ "cat": "<category>", "price": "<price range>", "weak": "<weakness>" }],
+  "pain_points": ["<string>"]
+}`
+
   const completion = await callGroq([{ role: 'user', content: prompt }], {
     model: 'llama-3.3-70b-versatile',
     temperature: 0.7,
     max_tokens: 2048,
   })
+
+  if (!completion?.choices?.[0]) {
+    throw new Error('Signal Engine returned an empty response. Please try again.')
+  }
 
   const text = completion.choices[0]?.message?.content || ''
   let cleaned = text.replace(/```json|```/g, '').trim()
@@ -96,11 +120,35 @@ export const runCraftEngine = async (
   pricePoint: string,
   marketGap: string = ''
 ): Promise<CraftResult> => {
+  const prompt = `You are a brand identity strategist. Create a complete brand identity for the following business and return a JSON object only — no markdown, no explanation.
+
+Business Idea: ${idea}
+Industry: ${industry}
+Target Audience: ${targetAudience}
+Price Point: ${pricePoint}
+Market Gap: ${marketGap}
+
+Return this exact JSON shape:
+{
+  "brand_names": ["<name1>", "<name2>", "<name3>"],
+  "selected_name": "<best name>",
+  "taglines": ["<tagline1>", "<tagline2>", "<tagline3>"],
+  "selected_tagline": "<best tagline>",
+  "brand_voice": { "tone": "<string>", "vibe": "<string>", "writing_example": "<string>" },
+  "color_palette": [{ "hex": "#RRGGBB", "label": "<color name>" }],
+  "typography": { "heading": "<font name>", "body": "<font name>" },
+  "product_concepts": [{ "name": "<string>", "desc": "<string>", "price": "<string>" }]
+}`
+
   const completion = await callGroq([{ role: 'user', content: prompt }], {
     model: 'llama-3.3-70b-versatile',
     temperature: 0.8,
     max_tokens: 2048,
   })
+
+  if (!completion?.choices?.[0]) {
+    throw new Error('Craft Engine returned an empty response. Please try again.')
+  }
 
   const text = completion.choices[0]?.message?.content || ''
   let cleaned = text.replace(/```json|```/g, '').trim()
@@ -135,11 +183,32 @@ export const runReachEngine = async (
   brandVoice: string,
   marketGap: string
 ): Promise<ReachResult> => {
+  const prompt = `You are a growth marketing strategist. Create a comprehensive marketing plan for the following brand and return a JSON object only — no markdown, no explanation.
+
+Brand Name: ${brandName}
+Industry: ${industry}
+Target Audience: ${targetAudience}
+Brand Voice: ${brandVoice}
+Market Gap: ${marketGap}
+
+Return this exact JSON shape:
+{
+  "social_hooks": [{ "hook": "<string>", "visual": "<string>", "audio": "<string>" }],
+  "ad_angles": [{ "title": "<string>", "type": "<string>", "tag": "<string>", "copy": "<string>", "cta": "<string>" }],
+  "email_sequence": [{ "step": 1, "name": "<string>", "subject": "<string>", "preview": "<string>", "goal": "<string>", "cta": "<string>" }],
+  "campaigns": [{ "title": "<string>", "type": "<string>", "status": "<string>" }]
+}`
+
   const completion = await callGroq([{ role: 'user', content: prompt }], {
     model: 'llama-3.3-70b-versatile',
     temperature: 0.8,
     max_tokens: 2048,
   })
+
+  if (!completion?.choices?.[0]) {
+    throw new Error('Reach Engine returned an empty response. Please try again.')
+  }
+
   const text = completion.choices[0]?.message?.content || ''
   const cleaned = text.replace(/```json|```/g, '').trim()
   const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
@@ -168,11 +237,32 @@ export const runPulseEngine = async (
   productConcepts: string,
   brandVoice: string
 ): Promise<PulseResult> => {
+  const prompt = `You are a customer experience specialist. Design a customer experience strategy for the following brand and return a JSON object only — no markdown, no explanation.
+
+Brand Name: ${brandName}
+Industry: ${industry}
+Target Audience: ${targetAudience}
+Product Concepts: ${productConcepts}
+Brand Voice: ${brandVoice}
+
+Return this exact JSON shape:
+{
+  "sentiment_score": <integer 0-100>,
+  "retention_strategy": "<string>",
+  "support_responses": [{ "question": "<string>", "response": "<string>" }],
+  "faqs": [{ "q": "<string>", "a": "<string>" }]
+}`
+
   const completion = await callGroq([{ role: 'user', content: prompt }], {
     model: 'llama-3.3-70b-versatile',
     temperature: 0.7,
     max_tokens: 1500,
   })
+
+  if (!completion?.choices?.[0]) {
+    throw new Error('Pulse Engine returned an empty response. Please try again.')
+  }
+
   const text = completion.choices[0]?.message?.content || ''
   const cleaned = text.replace(/```json|```/g, '').trim()
   const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
@@ -204,11 +294,35 @@ export const runCapitalEngine = async (
   pricePoint: string,
   productConcepts: string
 ): Promise<CapitalResult> => {
+  const prompt = `You are a startup financial analyst. Build a financial model for the following brand and return a JSON object only — no markdown, no explanation.
+
+Brand Name: ${brandName}
+Industry: ${industry}
+Target Audience: ${targetAudience}
+Price Point: ${pricePoint}
+Product Concepts: ${productConcepts}
+
+Return this exact JSON shape:
+{
+  "launch_budget": <number in USD>,
+  "target_gmv": <number in USD for 30 days>,
+  "break_even_units": <integer>,
+  "growth_readiness": <integer 0-100>,
+  "products": [{ "name": "<string>", "landed_cost": <number>, "retail_price": <number>, "margin": <number 0-100>, "note": "<string>" }],
+  "risk_warnings": [{ "title": "<string>", "description": "<string>", "severity": "high|medium" }],
+  "revenue_projection": [{ "day": "<Day N>", "amount": <number> }]
+}`
+
   const completion = await callGroq([{ role: 'user', content: prompt }], {
     model: 'llama-3.3-70b-versatile',
     temperature: 0.7,
     max_tokens: 2048,
   })
+
+  if (!completion?.choices?.[0]) {
+    throw new Error('Capital Engine returned an empty response. Please try again.')
+  }
+
   const text = completion.choices[0]?.message?.content || ''
   const cleaned = text.replace(/```json|```/g, '').trim()
   const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
@@ -230,7 +344,14 @@ export async function sendBlueprintEmail(params: {
     // fire and forget — don't block the UI
     supabase.functions.invoke('send-blueprint-email', {
       body: params,
-    }).catch(console.error)
+    }).catch((err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err)
+      if (message.includes('RESEND_API_KEY')) {
+        console.warn('Blueprint email skipped: RESEND_API_KEY not configured')
+      } else {
+        console.error('Blueprint email failed:', message)
+      }
+    })
     track('blueprint_email_sent', { brandName: params.brandName })
   } catch (e) {
     console.error('Email send failed silently:', e)
