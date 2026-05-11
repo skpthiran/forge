@@ -335,7 +335,7 @@ export default function ProjectDetailPage() {
                   try {
                     const { error } = await updateBrand(brand.id, { is_public: !brand.is_public })
                     if (!error) setBrand(prev => prev ? { ...prev, is_public: !prev.is_public } : prev)
-                    else toast.error('Failed to update sharing setting.')
+                    else toast.error('Unable to update sharing setting. Please check your connection and try again.')
                   } finally {
                     setIsUpdatingShare(false)
                   }
