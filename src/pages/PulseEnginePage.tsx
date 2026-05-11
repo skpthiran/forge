@@ -41,7 +41,7 @@ export default function PulseEnginePage() {
       if (!user) return
       const saved = localStorage.getItem(`forge_pulse_result_${user.id}`)
       if (saved) {
-        try { setResult(JSON.parse(saved)) } catch (e) { console.warn('Failed to restore saved Pulse Engine result:', e) }
+        try { setResult(JSON.parse(saved)) } catch (e) { console.warn('Could not restore previous Pulse Engine results. They may be from an older version or corrupted.', e) }
       }
     }
     restoreSaved()

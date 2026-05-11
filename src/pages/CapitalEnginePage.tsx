@@ -43,7 +43,7 @@ export default function CapitalEnginePage() {
       if (!user) return
       const saved = localStorage.getItem(`forge_capital_result_${user.id}`)
       if (saved) {
-        try { setResult(JSON.parse(saved)) } catch (e) { console.warn('Failed to restore saved Capital Engine result:', e) }
+        try { setResult(JSON.parse(saved)) } catch (e) { console.warn('Could not restore previous Capital Engine results. They may be from an older version or corrupted.', e) }
       }
     }
     restoreSaved()
