@@ -3,11 +3,12 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Circle, ArrowRight, Activity, Palette, Package, FileText, Rocket, Cpu, Download, Sparkles, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getBrandById, Brand } from '../services/supabase';
+import { getBrandById, Brand, updateBrand } from '../services/supabase';
 import { exportBrandKitPDF } from '../utils/exportPDF';
 import { useEffect, useState } from 'react';
 import { sendBlueprintEmail } from '../services/gemini';
 import { supabase } from '../services/supabase';
+import { toast } from 'sonner';
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -20,6 +21,7 @@ export default function ProjectDetailPage() {
   const [craftResult, setCraftResult] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [isUpdatingShare, setIsUpdatingShare] = useState(false);
 
   const handleShare = () => {
     const url = `${window.location.origin}/b/${id}`
@@ -294,7 +296,7 @@ export default function ProjectDetailPage() {
             )}
          </div>
 
-         <div className="col-span-1 space-y-6">
+          <div className="col-span-1 space-y-6">
             <Card className="p-6 bg-gradient-to-br from-[#0c0c0c] to-[#050505] border-white/10 relative overflow-hidden">
                <div className="absolute top-0 right-0 p-4 opacity-10">
                   <Cpu className="w-32 h-32 text-primary" />
@@ -317,7 +319,41 @@ export default function ProjectDetailPage() {
                       : 'Run the Craft Engine to generate your product concepts.'}
                   </div>
                </div>
-            </Card>
+             </Card>
+
+            <div className="flex items-center gap-3 p-4 rounded-lg border border-white/10 bg-white/5">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-white">Share Brand Blueprint</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {brand.is_public ? 'Anyone with the link can view this blueprint.' : 'Only you can see this brand.'}
+                </p>
+              </div>
+              <button
+                onClick={async () => {
+                  if (isUpdatingShare) return
+                  setIsUpdatingShare(true)
+                  const nextIsPublic = !brand.is_public
+                  try {
+                    const { data: updatedBrand, error } = await updateBrand(brand.id, { is_public: nextIsPublic })
+                    if (!error && updatedBrand) setBrand(prev => prev ? { ...prev, is_public: updatedBrand.is_public } : prev)
+                    else {
+                      console.error('Failed to update sharing setting:', error)
+                      toast.error('Unable to update sharing setting. Please check your connection and try again.')
+                    }
+                  } finally {
+                    setIsUpdatingShare(false)
+                  }
+                }}
+                disabled={isUpdatingShare}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  brand.is_public ? 'bg-primary' : 'bg-white/20'
+                }`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  brand.is_public ? 'translate-x-6' : 'translate-x-1'
+                }`} />
+              </button>
+            </div>
 
             <Button
               onClick={handleShare}

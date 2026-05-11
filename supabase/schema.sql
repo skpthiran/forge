@@ -26,6 +26,7 @@ create table if not exists public.brands (
   price_point text,
   status text default 'active' check (status in ('active', 'archived')),
   launch_readiness integer default 0,
+  is_public boolean default false,
   created_at timestamp with time zone default timezone('utc', now()),
   updated_at timestamp with time zone default timezone('utc', now())
 );
@@ -128,6 +129,7 @@ create policy "Users can create craft results"
 -- ============================================
 
 create index if not exists brands_user_id_idx on public.brands(user_id);
+create index if not exists brands_id_is_public_idx on public.brands(id, is_public);
 create index if not exists signal_results_brand_id_idx on public.signal_results(brand_id);
 create index if not exists signal_results_user_id_idx on public.signal_results(user_id);
 create index if not exists craft_results_brand_id_idx on public.craft_results(brand_id);
@@ -147,6 +149,32 @@ begin
     new.email
   );
   return new;
+end;
+$$ language plpgsql security definer;
+
+create or replace function public.decrement_brands_used(user_id_input uuid)
+returns void as $$
+begin
+  if auth.uid() is null or auth.uid() <> user_id_input then
+    raise exception 'Not authorized';
+  end if;
+
+  update public.profiles
+  set brands_used = greatest(0, brands_used - 1)
+  where id = user_id_input;
+end;
+$$ language plpgsql security definer;
+
+create or replace function public.increment_brands_used(user_id_input uuid)
+returns void as $$
+begin
+  if auth.uid() is null or auth.uid() <> user_id_input then
+    raise exception 'Not authorized';
+  end if;
+
+  update public.profiles
+  set brands_used = brands_used + 1
+  where id = user_id_input;
 end;
 $$ language plpgsql security definer;
 

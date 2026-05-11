@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { BrainCircuit, Sparkles, Target, Palette, Zap, FileText, Rocket, CheckCircle2, Download, Save, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { runSignalEngine, runCraftEngine, SignalResult, CraftResult } from '../services/gemini';
-import { createBrand, saveSignalResult, saveCraftResult, getProfile, supabase } from '../services/supabase'
+import { createBrand, saveSignalResult, saveCraftResult, getProfile } from '../services/supabase'
 import { toast } from 'sonner'
 
 export default function DemoGeneratorPage() {
@@ -128,11 +128,6 @@ export default function DemoGeneratorPage() {
         product_concepts: craftResult.product_concepts,
         raw_response: craftResult.raw_response,
       })
-
-      await supabase
-        .from('profiles')
-        .update({ brands_used: used + 1 })
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
 
       toast.success('Brand saved to your Command Center!')
       navigate('/dashboard')

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -7,6 +7,7 @@ import { Send, Megaphone, Smartphone, AtSign, Calendar, MessageSquare, Target, M
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { runReachEngine, ReachResult } from '../services/gemini'
+import { supabase } from '../services/supabase'
 
 export default function ReachEnginePage() {
   const [brandName, setBrandName] = useState('')
@@ -25,12 +26,28 @@ export default function ReachEnginePage() {
     try {
       const data = await runReachEngine(brandName, industry, targetAudience, brandVoice, marketGap)
       setResult(data)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        localStorage.setItem(`forge_reach_result_${user.id}`, JSON.stringify(data))
+      }
     } catch (e) {
       setError('AI generation failed. Please try again.')
     } finally {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    async function restoreSaved() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const saved = localStorage.getItem(`forge_reach_result_${user.id}`)
+      if (saved) {
+        try { setResult(JSON.parse(saved)) } catch (e) { console.warn('Could not restore previous Reach Engine results. They may be from an older version or corrupted.', e) }
+      }
+    }
+    restoreSaved()
+  }, [])
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-700 pb-12">

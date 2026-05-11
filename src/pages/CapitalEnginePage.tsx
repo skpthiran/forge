@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Briefcase, BarChart3, Calculator, AlertTriangle, Loader2 } from 'lucide-react'
 import { runCapitalEngine, CapitalResult } from '../services/gemini'
+import { supabase } from '../services/supabase'
 
 export default function CapitalEnginePage() {
   const [brandName, setBrandName] = useState('')
@@ -23,6 +24,10 @@ export default function CapitalEnginePage() {
     try {
       const data = await runCapitalEngine(brandName, industry, targetAudience, pricePoint, productConcepts)
       setResult(data)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        localStorage.setItem(`forge_capital_result_${user.id}`, JSON.stringify(data))
+      }
     } catch (e) {
       setError('AI generation failed. Please try again.')
     } finally {
@@ -31,6 +36,18 @@ export default function CapitalEnginePage() {
   }
 
   const maxRevenue = result ? Math.max(...result.revenue_projection.map(r => r.amount)) : 0
+
+  useEffect(() => {
+    async function restoreSaved() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const saved = localStorage.getItem(`forge_capital_result_${user.id}`)
+      if (saved) {
+        try { setResult(JSON.parse(saved)) } catch (e) { console.warn('Could not restore previous Capital Engine results. They may be from an older version or corrupted.', e) }
+      }
+    }
+    restoreSaved()
+  }, [])
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-700 pb-12">

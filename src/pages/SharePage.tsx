@@ -65,7 +65,7 @@ export default function SharePage() {
 
   if (notFound) return (
     <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center gap-4 text-white">
-      <p className="text-white/40 text-sm">Brand not found or no longer public.</p>
+      <p className="text-white/40 text-sm">This brand blueprint is private or does not exist.</p>
       <Link to="/" className="text-orange-400 text-xs hover:underline">← Back to FORGE</Link>
     </div>
   )
