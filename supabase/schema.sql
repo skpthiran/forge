@@ -129,6 +129,7 @@ create policy "Users can create craft results"
 -- ============================================
 
 create index if not exists brands_user_id_idx on public.brands(user_id);
+create index if not exists brands_id_is_public_idx on public.brands(id, is_public);
 create index if not exists signal_results_brand_id_idx on public.signal_results(brand_id);
 create index if not exists signal_results_user_id_idx on public.signal_results(user_id);
 create index if not exists craft_results_brand_id_idx on public.craft_results(brand_id);

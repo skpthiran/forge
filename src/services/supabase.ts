@@ -101,7 +101,14 @@ export const createBrand = async (brandData: {
 
   if (!error && data) {
     const { error: incrementError } = await supabase.rpc('increment_brands_used', { user_id_input: user.id })
-    if (incrementError) return { data, error: incrementError }
+    if (incrementError) {
+      await supabase
+        .from('brands')
+        .delete()
+        .eq('id', data.id)
+        .eq('user_id', user.id)
+      return { data: null, error: incrementError }
+    }
   }
 
   return { data, error }
