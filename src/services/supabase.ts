@@ -100,7 +100,8 @@ export const createBrand = async (brandData: {
     .single()
 
   if (!error && data) {
-    await supabase.rpc('increment_brands_used', { user_id_input: user.id })
+    const { error: incrementError } = await supabase.rpc('increment_brands_used', { user_id_input: user.id })
+    if (incrementError) return { data, error: incrementError }
   }
 
   return { data, error }
@@ -130,7 +131,7 @@ export async function deleteBrand(id: string): Promise<{ error: any }> {
     .select('id')
 
   if (error) return { error }
-  if (!deletedRows || deletedRows.length === 0) return { error: null }
+  if (!deletedRows || deletedRows.length === 0) return { error: new Error('Brand not found or not authorized') }
 
   const { error: decrementError } = await supabase.rpc('decrement_brands_used', { user_id_input: user.id })
   return { error: decrementError }

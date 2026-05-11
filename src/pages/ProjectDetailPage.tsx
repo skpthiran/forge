@@ -21,6 +21,7 @@ export default function ProjectDetailPage() {
   const [craftResult, setCraftResult] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [isUpdatingShare, setIsUpdatingShare] = useState(false);
 
   const handleShare = () => {
     const url = `${window.location.origin}/b/${id}`
@@ -329,10 +330,17 @@ export default function ProjectDetailPage() {
               </div>
               <button
                 onClick={async () => {
-                  const { error } = await updateBrand(brand.id, { is_public: !brand.is_public })
-                  if (!error) setBrand(prev => prev ? { ...prev, is_public: !prev.is_public } : prev)
-                  else toast.error('Failed to update sharing setting.')
+                  if (isUpdatingShare) return
+                  setIsUpdatingShare(true)
+                  try {
+                    const { error } = await updateBrand(brand.id, { is_public: !brand.is_public })
+                    if (!error) setBrand(prev => prev ? { ...prev, is_public: !prev.is_public } : prev)
+                    else toast.error('Failed to update sharing setting.')
+                  } finally {
+                    setIsUpdatingShare(false)
+                  }
                 }}
+                disabled={isUpdatingShare}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   brand.is_public ? 'bg-primary' : 'bg-white/20'
                 }`}
