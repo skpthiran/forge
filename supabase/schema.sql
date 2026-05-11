@@ -26,6 +26,7 @@ create table if not exists public.brands (
   price_point text,
   status text default 'active' check (status in ('active', 'archived')),
   launch_readiness integer default 0,
+  is_public boolean default false,
   created_at timestamp with time zone default timezone('utc', now()),
   updated_at timestamp with time zone default timezone('utc', now())
 );
@@ -147,6 +148,15 @@ begin
     new.email
   );
   return new;
+end;
+$$ language plpgsql security definer;
+
+create or replace function public.decrement_brands_used(user_id_input uuid)
+returns void as $$
+begin
+  update public.profiles
+  set brands_used = greatest(0, brands_used - 1)
+  where id = user_id_input;
 end;
 $$ language plpgsql security definer;
 

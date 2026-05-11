@@ -18,6 +18,7 @@ export type Brand = {
   price_point: string | null
   status: string
   launch_readiness: number
+  is_public: boolean
   created_at: string
   updated_at: string
 }
@@ -97,30 +98,60 @@ export const createBrand = async (brandData: {
     .insert({ ...brandData, user_id: user.id })
     .select()
     .single()
+
+  if (!error && data) {
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('brands_used')
+      .eq('id', user.id)
+      .single()
+
+    if (!profileError) {
+      await supabase
+        .from('profiles')
+        .update({ brands_used: (profile?.brands_used || 0) + 1 })
+        .eq('id', user.id)
+    }
+  }
+
   return { data, error }
 }
 
 export const getBrands = async () => {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { data: [], error: new Error('Not authenticated') }
+
   const { data, error } = await supabase
     .from('brands')
     .select('*')
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
   return { data, error }
 }
 
 export async function deleteBrand(id: string): Promise<{ error: any }> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: new Error('Not authenticated') }
+
+  await supabase.rpc('decrement_brands_used', { user_id_input: user.id })
+
   const { error } = await supabase
     .from('brands')
     .delete()
     .eq('id', id)
+    .eq('user_id', user.id)
   return { error }
 }
 
 export const getBrandById = async (id: string) => {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { data: null, error: new Error('Not authenticated') }
+
   const { data, error } = await supabase
     .from('brands')
     .select('*, signal_results(*), craft_results(*)')
     .eq('id', id)
+    .eq('user_id', user.id)
     .single()
   return { data, error }
 }
@@ -129,11 +160,16 @@ export const updateBrand = async (id: string, updates: Partial<{
   name: string
   status: string
   launch_readiness: number
+  is_public: boolean
 }>) => {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { data: null, error: new Error('Not authenticated') }
+
   const { data, error } = await supabase
     .from('brands')
     .update({ ...updates, updated_at: new Date().toISOString() })
     .eq('id', id)
+    .eq('user_id', user.id)
     .select()
     .single()
   return { data, error }
@@ -166,10 +202,14 @@ export const saveSignalResult = async (brandId: string, result: {
 }
 
 export const getSignalResult = async (brandId: string) => {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { data: null, error: new Error('Not authenticated') }
+
   const { data, error } = await supabase
     .from('signal_results')
     .select('*')
     .eq('brand_id', brandId)
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(1)
     .single()
@@ -203,10 +243,14 @@ export const saveCraftResult = async (brandId: string, result: {
 }
 
 export const getCraftResult = async (brandId: string) => {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { data: null, error: new Error('Not authenticated') }
+
   const { data, error } = await supabase
     .from('craft_results')
     .select('*')
     .eq('brand_id', brandId)
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(1)
     .single()
@@ -232,8 +276,9 @@ export const getProfile = async () => {
 export const getPublicBrand = async (id: string) => {
   const { data, error } = await supabase
     .from('brands')
-    .select('name, idea, industry, target_audience, price_point, launch_readiness, status, created_at, signal_results(demand_score, competition_level, audience_heat, market_gap, opportunity_window), craft_results(selected_tagline, taglines, brand_voice, color_palette, product_concepts)')
+    .select('name, idea, industry, target_audience, price_point, launch_readiness, status, created_at, is_public, signal_results(demand_score, competition_level, audience_heat, market_gap, opportunity_window), craft_results(selected_tagline, taglines, brand_voice, color_palette, product_concepts)')
     .eq('id', id)
+    .eq('is_public', true)
     .single()
   return { data, error }
 }

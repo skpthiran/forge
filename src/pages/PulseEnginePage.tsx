@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { HeartPulse, MessageCircle, Star, Inbox, Sparkles, Send, Loader2 } from 'lucide-react'
 import { runPulseEngine, PulseResult } from '../services/gemini'
+import { supabase } from '../services/supabase'
 
 export default function PulseEnginePage() {
   const [brandName, setBrandName] = useState('')
@@ -23,12 +24,28 @@ export default function PulseEnginePage() {
     try {
       const data = await runPulseEngine(brandName, industry, targetAudience, productConcepts, brandVoice)
       setResult(data)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        localStorage.setItem(`forge_pulse_result_${user.id}`, JSON.stringify(data))
+      }
     } catch (e) {
       setError('AI generation failed. Please try again.')
     } finally {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    async function restoreSaved() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const saved = localStorage.getItem(`forge_pulse_result_${user.id}`)
+      if (saved) {
+        try { setResult(JSON.parse(saved)) } catch {}
+      }
+    }
+    restoreSaved()
+  }, [])
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-700 pb-12">
