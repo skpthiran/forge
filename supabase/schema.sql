@@ -154,8 +154,25 @@ $$ language plpgsql security definer;
 create or replace function public.decrement_brands_used(user_id_input uuid)
 returns void as $$
 begin
+  if auth.uid() is null or auth.uid() <> user_id_input then
+    raise exception 'Not authorized';
+  end if;
+
   update public.profiles
   set brands_used = greatest(0, brands_used - 1)
+  where id = user_id_input;
+end;
+$$ language plpgsql security definer;
+
+create or replace function public.increment_brands_used(user_id_input uuid)
+returns void as $$
+begin
+  if auth.uid() is null or auth.uid() <> user_id_input then
+    raise exception 'Not authorized';
+  end if;
+
+  update public.profiles
+  set brands_used = brands_used + 1
   where id = user_id_input;
 end;
 $$ language plpgsql security definer;

@@ -8,6 +8,7 @@ import { exportBrandKitPDF } from '../utils/exportPDF';
 import { useEffect, useState } from 'react';
 import { sendBlueprintEmail } from '../services/gemini';
 import { supabase } from '../services/supabase';
+import { toast } from 'sonner';
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -330,6 +331,7 @@ export default function ProjectDetailPage() {
                 onClick={async () => {
                   const { error } = await updateBrand(brand.id, { is_public: !brand.is_public })
                   if (!error) setBrand(prev => prev ? { ...prev, is_public: !prev.is_public } : prev)
+                  else toast.error('Failed to update sharing setting.')
                 }}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   brand.is_public ? 'bg-primary' : 'bg-white/20'

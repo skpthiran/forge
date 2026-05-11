@@ -100,18 +100,7 @@ export const createBrand = async (brandData: {
     .single()
 
   if (!error && data) {
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('brands_used')
-      .eq('id', user.id)
-      .single()
-
-    if (!profileError) {
-      await supabase
-        .from('profiles')
-        .update({ brands_used: (profile?.brands_used || 0) + 1 })
-        .eq('id', user.id)
-    }
+    await supabase.rpc('increment_brands_used', { user_id_input: user.id })
   }
 
   return { data, error }
@@ -133,14 +122,18 @@ export async function deleteBrand(id: string): Promise<{ error: any }> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: new Error('Not authenticated') }
 
-  await supabase.rpc('decrement_brands_used', { user_id_input: user.id })
-
-  const { error } = await supabase
+  const { data: deletedRows, error } = await supabase
     .from('brands')
     .delete()
     .eq('id', id)
     .eq('user_id', user.id)
-  return { error }
+    .select('id')
+
+  if (error) return { error }
+  if (!deletedRows || deletedRows.length === 0) return { error: null }
+
+  const { error: decrementError } = await supabase.rpc('decrement_brands_used', { user_id_input: user.id })
+  return { error: decrementError }
 }
 
 export const getBrandById = async (id: string) => {

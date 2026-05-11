@@ -43,7 +43,7 @@ export default function ReachEnginePage() {
       if (!user) return
       const saved = localStorage.getItem(`forge_reach_result_${user.id}`)
       if (saved) {
-        try { setResult(JSON.parse(saved)) } catch {}
+        try { setResult(JSON.parse(saved)) } catch (e) { console.warn('Failed to restore saved result:', e) }
       }
     }
     restoreSaved()
