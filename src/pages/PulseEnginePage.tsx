@@ -84,7 +84,7 @@ export default function PulseEnginePage() {
               <Input value={brandVoice} onChange={e => setBrandVoice(e.target.value)} placeholder="e.g. Science-backed, clean, trustworthy" className="bg-zinc-900 border-white/10" />
             </div>
             {error && <p className="text-red-400 text-sm">{error}</p>}
-            <Button onClick={handleRun} disabled={loading || !brandName || !industry} className="w-full bg-primary hover:bg-orange-600 text-white uppercase tracking-widest text-xs font-bold h-11">
+            <Button onClick={handleRun} disabled={loading || !brandName || !industry} className="w-full bg-rose-600 hover:bg-rose-700 text-white uppercase tracking-widest text-xs font-bold h-11">
               {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing...</> : 'Run Pulse Analysis'}
             </Button>
           </div>
