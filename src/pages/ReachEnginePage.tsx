@@ -86,7 +86,7 @@ export default function ReachEnginePage() {
               <Textarea value={marketGap} onChange={e => setMarketGap(e.target.value)} placeholder="Paste market gap from Signal Engine..." className="bg-zinc-900 border-white/10 resize-none" rows={3} />
             </div>
             {error && <p className="text-red-400 text-sm">{error}</p>}
-            <Button onClick={handleRun} disabled={loading || !brandName || !industry} className="w-full bg-primary hover:bg-orange-600 text-white uppercase tracking-widest text-xs font-bold h-11">
+            <Button onClick={handleRun} disabled={loading || !brandName || !industry} className="w-full bg-green-600 hover:bg-green-700 text-white uppercase tracking-widest text-xs font-bold h-11">
               {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating Campaign...</> : 'Generate Campaign'}
             </Button>
           </div>
